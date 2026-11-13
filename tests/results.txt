@@ -1,0 +1,22 @@
+✔ ASLR changes do not create false differences (0.909125ms)
+✔ Same symbol at distinct RVAs stays distinct (0.096625ms)
+✔ Equal RVAs in different module builds stay distinct (0.075375ms)
+✔ Cross-build comparisons are rejected (0.16775ms)
+✔ Capture scopes cannot be silently mixed (0.068375ms)
+✔ Partial capture stays partial, including an empty side (0.053667ms)
+✔ Dropped events cannot be declared complete (0.050792ms)
+✔ Repeated hits retain exact event references and thread identity (0.572333ms)
+✔ Duplicate run identity is rejected (0.0785ms)
+✔ Unknown module cannot become an address match (0.090667ms)
+✔ Oversized RVA and unsorted events are rejected (0.079833ms)
+✔ Renamed symbols cannot conceal exact address matches (0.061334ms)
+✔ Malformed provenance is not promoted to observation (0.046083ms)
+✔ Comparison is reproducible and does not modify the observations (0.4935ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 14
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 77.703958

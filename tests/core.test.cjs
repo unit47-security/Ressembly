@@ -1,0 +1,17 @@
+const test=require('node:test'),assert=require('node:assert/strict');
+const core=require('../prototype/core.js');
+function fixture(){const h='a'.repeat(64);const run=(id,base)=>({id,label:id,input_label:id,target_sha256:h,capture:{mode:'function-entry',status:'complete',scope_id:'parser',dropped_events:0},modules:[{id:'main',name:'parser.exe',sha256:h,image_base:base}],events:[{seq:1,thread_id:1,kind:'function_entry',module_id:'main',rva:'0x0100',function:'parse'}]});return {schema_version:1,provenance:'synthetic-demo',target:{name:'parser.exe',sha256:h,architecture:'x86_64',os:'windows'},runs:[run('a','0x100000'),run('b','0x900000')]};}
+test('ASLR changes do not create false differences',()=>{const c=core.compare(fixture(),'a','b');assert.equal(c.rows.length,1);assert.equal(c.rows[0].relation,'observed-both');});
+test('Same symbol at distinct RVAs stays distinct',()=>{const b=fixture();b.runs[1].events[0].rva='0x200';assert.equal(core.compare(b,'a','b').rows.length,2);});
+test('Equal RVAs in different module builds stay distinct',()=>{const b=fixture();b.runs[1].modules[0].sha256='b'.repeat(64);assert.equal(core.compare(b,'a','b').rows.length,2);});
+test('Cross-build comparisons are rejected',()=>{const b=fixture();b.runs[1].target_sha256='b'.repeat(64);assert.throws(()=>core.compare(b,'a','b'),/Build identity/);});
+test('Capture scopes cannot be silently mixed',()=>{const b=fixture();b.runs[1].capture.scope_id='other';assert.throws(()=>core.compare(b,'a','b'),/scopes differ/);});
+test('Partial capture stays partial, including an empty side',()=>{const b=fixture();b.runs[0].events=[];b.runs[0].capture.status='partial';const c=core.compare(b,'a','b');assert.equal(c.quality,'partial');assert.equal(c.rows[0].relation,'observed-only-b');});
+test('Dropped events cannot be declared complete',()=>{const b=fixture();b.runs[0].capture.dropped_events=3;assert.throws(()=>core.validate(b),/dropped/);});
+test('Repeated hits retain exact event references and thread identity',()=>{const b=fixture();b.runs[1].events.push({...b.runs[1].events[0],seq:5,thread_id:7});const row=core.compare(b,'a','b').rows[0];assert.equal(row.hits_b,2);assert.deepEqual(row.refs_b.map(e=>[e.seq,e.thread_id]),[[1,1],[5,7]]);});
+test('Duplicate run identity is rejected',()=>{const b=fixture();b.runs[1].id='a';assert.throws(()=>core.validate(b),/Duplicate/);});
+test('Unknown module cannot become an address match',()=>{const b=fixture();b.runs[1].events[0].module_id='missing';assert.throws(()=>core.validate(b),/unknown module/);});
+test('Oversized RVA and unsorted events are rejected',()=>{let b=fixture();b.runs[0].events[0].rva='0x10000000000000000';assert.throws(()=>core.validate(b),/RVA/);b=fixture();b.runs[0].events.push({...b.runs[0].events[0]});assert.throws(()=>core.validate(b),/sequence/);});
+test('Renamed symbols cannot conceal exact address matches',()=>{const b=fixture();b.runs[1].events[0].function='renamed';const row=core.compare(b,'a','b').rows[0];assert.equal(row.relation,'observed-both');assert.equal(row.names_disagree,true);});
+test('Malformed provenance is not promoted to observation',()=>{const b=fixture();delete b.provenance;assert.throws(()=>core.validate(b),/provenance/);});
+test('Comparison is reproducible and does not modify the observations',()=>{const b=fixture(),before=JSON.stringify(b);assert.deepEqual(core.compare(b,'a','b'),core.compare(b,'a','b'));assert.equal(JSON.stringify(b),before);});
