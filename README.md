@@ -4,6 +4,14 @@
 
 Experimental reverse-engineering and memory-research suite by **UNIT-47**, using GDB/Python on Linux x86-64. **Alpha 0.6.0** — GPL-3.0-or-later.
 
+## Diagnostics 0.9.0
+
+This standalone package records process and thread activity from cooperating applications, imports aggregate jemalloc statistics and exchanges static function selections with Ghidra. Its local viewer reads the resulting reports.
+
+[Download the ZIP](diagnostics/downloads/ressembly-diagnostics-0.9.0-local.zip) · [Quick start](diagnostics/README.md) · [Validation](diagnostics/VALIDATION.md) · [SHA-256](diagnostics/SHA256SUMS)
+
+The sections below describe the public debugger alpha 0.6.0.
+
 ## Implemented
 
 - Debug context: disassembly, registers, stack and breakpoints.

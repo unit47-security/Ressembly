@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'none'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta name="color-scheme" content="dark">
+  <title>Ressembly — Evidence viewer</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#workspace">Skip to evidence</a>
+  <header class="masthead">
+    <div class="brand"><span class="brand-mark" aria-hidden="true">R/</span><span>Ressembly<small>UNIT-47 / RESEARCH TOOLS</small></span></div>
+    <div class="local-status"><span aria-hidden="true"></span>Local evidence viewer</div>
+  </header>
+  <main id="workspace">
+    <section class="intro" aria-labelledby="page-title">
+      <p class="eyebrow">EVIDENCE WORKSPACE · INITIAL VIEWER</p>
+      <h1 id="page-title">Keep the observation.<br>Keep its limits.</h1>
+      <p class="lede">Inspect exported Ressembly data in one place. Files stay in this page’s memory. No debugger connection, uploads or background collection.</p>
+    </section>
+    <div class="workspace-grid">
+      <aside class="import-panel" aria-labelledby="import-title">
+        <p class="eyebrow">01 / IMPORT</p><h2 id="import-title">Open your evidence</h2>
+        <p class="muted">A JSON export from a debugging session, experiment or trusted plugin. No sample data is loaded.</p>
+        <label class="file-label" for="file-input">Choose JSON file</label>
+        <input id="file-input" type="file" accept=".json,application/json" aria-describedby="file-help">
+        <p id="file-help" class="small muted">Up to 1 MiB. Contexts, histories, dossiers, plugin results and step observations.</p>
+        <details class="paste-area">
+          <summary>Or paste exported JSON</summary>
+          <label for="json-input">JSON document</label>
+          <textarea id="json-input" spellcheck="false" maxlength="1048576" placeholder="Paste your exported JSON here"></textarea>
+          <button id="import-text" class="button secondary" type="button">Inspect pasted JSON</button>
+        </details>
+        <button id="clear" class="button quiet" type="button" disabled>Clear evidence</button>
+        <div id="feedback" role="status" aria-live="polite" aria-atomic="true" class="feedback"></div>
+        <div class="scope-note"><strong>Viewer, not debugger</strong><p>Importing a file does not authenticate its origin, rerun an experiment or establish a vulnerability.</p></div>
+      </aside>
+      <section class="evidence-panel" aria-labelledby="document-title">
+        <div id="empty" class="empty-state">
+          <div class="empty-symbol" aria-hidden="true">[ · ]</div>
+          <p class="eyebrow">NO DOCUMENT OPEN</p><h2>Start with an export.</h2>
+          <p>Context, object generations and observed changes will appear here, with their recorded coverage.</p>
+          <div class="empty-tags"><span>READ ONLY</span><span>LOCAL FILES</span><span>NO LIVE TARGET</span></div>
+        </div>
+        <div id="document" hidden>
+          <div class="document-header"><div><p class="eyebrow">02 / INSPECT</p><h2 id="document-title" tabindex="-1">Evidence</h2><p id="source-name" class="source-name"></p></div><span class="badge">SUPPLIED · UNVERIFIED</span></div>
+          <div class="record-picker">
+            <label for="record-select">View</label><select id="record-select"></select>
+            <div id="record-navigation" class="record-navigation" role="group" aria-label="Browse captured views" hidden>
+              <button id="record-previous" class="button secondary" type="button">Previous view</button>
+              <button id="record-next" class="button secondary" type="button">Next view</button>
+              <span id="record-position" role="status" aria-live="polite"></span>
+            </div>
+          </div>
+          <p id="integrity-notice" class="notice"></p>
+          <p id="precision-notice" class="small precision" hidden></p>
+          <div class="tabs" role="tablist" aria-label="Evidence views">
+            <button type="button" id="tab-summary" role="tab" aria-selected="true" aria-controls="panel-summary" data-panel="summary">Overview</button>
+            <button type="button" id="tab-records" role="tab" aria-selected="false" aria-controls="panel-records" data-panel="records" tabindex="-1">Records &amp; tables</button>
+            <button type="button" id="tab-raw" role="tab" aria-selected="false" aria-controls="panel-raw" data-panel="raw" tabindex="-1">Original JSON</button>
+          </div>
+          <section id="panel-summary" class="tab-panel" role="tabpanel" aria-labelledby="tab-summary" tabindex="0"><div id="summary"></div><p id="semantics" class="semantics"></p></section>
+          <section id="panel-records" class="tab-panel" role="tabpanel" aria-labelledby="tab-records" tabindex="0" hidden><div id="records"></div></section>
+          <section id="panel-raw" class="tab-panel" role="tabpanel" aria-labelledby="tab-raw" tabindex="0" hidden><p class="small muted">Original imported text, including all records. Selecting an embedded snapshot does not change this source.</p><pre id="raw-json"></pre></section>
+        </div>
+      </section>
+    </div>
+  </main>
+  <footer><span>Ressembly / UNIT-47</span><span>Allocator events ≠ observed writes. Evidence has boundaries.</span></footer>
+  <noscript>This local viewer requires JavaScript. It never needs a network connection.</noscript>
+</body>
+</html>

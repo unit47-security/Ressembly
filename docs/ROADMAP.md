@@ -1,6 +1,21 @@
 # Ressembly — roadmap operativa
 
-Aggiornata il 13 novembre 2026. Fonte corrente per il progetto UNIT-47; [roadmap Windows/Qt v0.1](ROADMAP-WINDOWS-v0.1.md) conservata come storico.
+Aggiornata il 21 novembre 2026. Fonte corrente per il progetto UNIT-47; [roadmap Windows/Qt v0.1](ROADMAP-WINDOWS-v0.1.md) conservata come storico.
+
+## Consegna Diagnostics 0.9.0
+
+| Stato | Attività | Risultato |
+|---|---|---|
+| ✅ | Processi e thread cooperanti | Timeline con spawn e fork collaudata su macOS ARM64 e Ubuntu x86-64. |
+| ✅ | Statistiche jemalloc | Sei contatori aggregati verificati su un export reale della 5.4.0. |
+| ✅ | Selezioni statiche Ghidra | Export e riapertura collaudati in headless. |
+| ✅ | Viewer locale | Import e navigazione dei rapporti nel browser. |
+| 🟡 | Funzioni estese | Restano aperti cronologia heap concorrente, tracciamento di processi arbitrari, dialoghi desktop Ghidra, sincronizzazione continua, controllo live del debugger e backend Windows/Linux ARM64. |
+| ⬜ | Suite 1.0 | Perimetro e collaudi finali ancora aperti. |
+
+[Pacchetto ZIP](../diagnostics/downloads/ressembly-diagnostics-0.9.0-local.zip) · [Guida](../diagnostics/README.md) · [Collaudi](../diagnostics/VALIDATION.md)
+
+Le sezioni successive documentano le fasi della suite e il perimetro dell’alfa 0.6.0.
 
 ## Obiettivo e vincoli
 

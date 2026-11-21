@@ -1,0 +1,22 @@
+{
+  "scope": "diagnostics",
+  "sha256": {
+    "LICENSE": "8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903",
+    "NOTICE": "e2588f963d633b5051bd42ca71d998fda130bdd7c399b9a971de43259260eb43",
+    "README.md": "d76965373facc4e40011cf1e8f4791c3decd36c768f4e6afb3373ecae7313b2d",
+    "docs/DIAGNOSTICS-PACKAGE.md": "8b121002dc8c9447c34513fcf403dedcdd2c89c1d5f89f6c2e3ab881c9277fac",
+    "docs/DIAGNOSTICS.md": "092bfe53236d6d660c7e9a6949722c35f099a74f664cff7ccb5fac38b10818a1",
+    "examples/jemalloc_stats_lab.c": "a128b02e648738a01d1135b440fb0ef4a3f52e496cb81bacfb39f6f5d6e51e66",
+    "examples/static_review_lab.c": "9f4b331fdf36bdc108a28a88bb70e105644cae5b0286c2fada0ac431eb3853b7",
+    "integrations/ghidra/RessemblyReview.java": "99e307bac0dbec10f4f3764ec12e6fcec8e8b1ec2b971ddd3b647cde56aafa6c",
+    "scripts/ressembly-diagnostics.py": "8bd6aa385a894811db49c227a614cdd879d21314eb599f21799f0e156a219ebc",
+    "src/ressembly/__init__.py": "630aa2292f4310e05632e3fa25efb739d0177cc6232ea4f21a99e6e347ee3187",
+    "src/ressembly/diagnostics.py": "28f0257a2330533e67a749a71d7f4a457b2076da66fa684a4c716ed2dd745b6c",
+    "src/ressembly/experiments.py": "8792b01da34d8e78e3536577d3c5e41d162aa78fdb1e2f3c90e8ef807731cd30",
+    "viewer/app.js": "53efeffac02e5b7e25be7a760807248c73d91e2fd946b60386e00f0581e44d08",
+    "viewer/index.html": "0819cfe2fcc5a488f092cc2c6ae5abef0e14572900d6ac3e88676411a6b35b33",
+    "viewer/model.js": "a790f31ba5decdc6bb841f0e052b2ba564ac63264f04070337dc48c2cd9ab7b8",
+    "viewer/style.css": "c18719e122f1cc500e4ab39e39d17f40987f9242c860888ef037920063638597"
+  },
+  "version": "0.9.0-local"
+}

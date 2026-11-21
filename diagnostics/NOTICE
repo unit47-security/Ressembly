@@ -1,0 +1,17 @@
+Ressembly — UNIT-47
+Copyright (C) 2026 Ressembly contributors
+SPDX-License-Identifier: GPL-3.0-or-later
+
+The original source code, owned examples, integration scripts and documentation
+in this local package are licensed under the GNU General Public License,
+version 3 or (at your option) any later version. See LICENSE for the full terms.
+This program is distributed without warranty; see LICENSE.
+
+The license was selected by the project owner on 13 November 2026.
+This local preparation is not a publication or authorization to upload a release.
+
+External tools (GDB, glibc, Ghidra, Java, Python, QEMU, Kali, GEF and Pwndbg)
+retain their own licenses and are not relicensed by this notice. Their binaries,
+sources, downloaded images and credentials in work/ are not part of the package.
+The bridge uses Ghidra's public APIs; Ghidra itself is not bundled.
+No third-party debugger implementation is included in the Ressembly source tree.
