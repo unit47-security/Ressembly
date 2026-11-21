@@ -1,49 +1,47 @@
-# Diagnostica di processi, allocator e selezioni Ghidra
+# Process diagnostics, allocator statistics, and Ghidra selections
 
-Queste funzioni sono nella copia di lavoro. Gli archivi precedenti della 0.8.0 conservano il proprio contenuto.
+These features are available in Diagnostics 0.9.0.
 
-## Processi e thread
+## Processes and threads
 
 ```sh
 python3 -B scripts/ressembly-diagnostics.py demo processes.json
 python3 -B scripts/ressembly-diagnostics.py demo fork-processes.json --method fork
 ```
 
-Il comando dimostrativo avvia due figli del supervisore. Ogni figlio registra due thread e una barriera fa sì che entrambe le sezioni siano aperte contemporaneamente. Il supervisore verifica l'uscita dei figli e salva il rapporto. Il metodo predefinito è `spawn`. `fork` è disponibile sui sistemi in cui Python lo supporta. Nel pacchetto locale il comando equivalente inizia con `ressembly diagnostics`.
+The demo supervisor starts two child processes. Each child records two threads, and a barrier ensures that their recorded sections overlap. The supervisor verifies the children's exit status and saves the report. The default start method is `spawn`. Use `fork` on systems where Python supports it. In a full Ressembly installation, the equivalent command starts with `ressembly diagnostics`.
 
-Per applicazioni cooperanti, `ressembly.diagnostics.ProcessLog` si istanzia nel processo che emette il log. `with log.thread("etichetta")` racchiude la sezione da registrare. `log.close()` restituisce la scheda dopo la chiusura di tutte le sezioni. La relazione con il padre si dichiara con `ProcessLog("figlio", parent_id=parent_id)`. Un log ereditato da fork va sostituito con un nuovo log del figlio. `report` raccoglie le schede e `write_new` salva su un percorso nuovo su un filesystem con supporto agli hard link.
+For cooperating applications, create a `ressembly.diagnostics.ProcessLog` in the process that emits the log. Use `with log.thread("label")` around the section to record. Call `log.close()` to obtain the process record after all sections have closed. Declare the parent relationship with `ProcessLog("child", parent_id=parent_id)`. After a fork, create a new log in the child. Use `report` to assemble the records and `write_new` to save to a new path on a filesystem that supports hard links.
 
-Gli identificativi del report distinguono le istanze anche quando PID e TID vengono riusati. Sequenza e tempo trascorso appartengono a ciascun processo. Gli eventi riportano sezioni dichiarate dall'applicazione. Ogni processo ha un limite di 128 eventi. Il supervisore del demo osserva i codici d'uscita. L'aggancio a processi arbitrari e la cronologia degli oggetti heap fra thread, arene e processi restano nella roadmap.
+Report identifiers distinguish process and thread instances when the operating system reuses PIDs or TIDs. Sequence numbers and elapsed times apply within each process. Events describe sections declared by the application, with a limit of 128 events per process. Exit codes are observed by the demo supervisor. Attaching to arbitrary processes and following heap object histories across threads, arenas, and processes remain open roadmap items.
 
-## Statistiche jemalloc
+## jemalloc statistics
 
-Un programma che usa jemalloc può esportare le sue statistiche aggregate con `malloc_stats_print` in modalità JSON. Il [manuale di jemalloc](https://jemalloc.net/jemalloc.3.html) descrive il formato, l'opzione `J` e le possibili differenze temporali dovute alle cache dei thread.
+A program using jemalloc can export aggregate statistics as JSON with `malloc_stats_print`. The [jemalloc manual](https://jemalloc.net/jemalloc.3.html) describes the format, the `J` option, and the delay that thread caches can introduce into the counts.
 
 ```sh
 python3 -B scripts/ressembly-diagnostics.py jemalloc stats.json summary.json
 ```
 
-L'importatore legge fino a 1 MiB e conserva i contatori validi in byte, le metriche assenti e lo SHA-256 del file sorgente. `examples/jemalloc_stats_lab.c` produce un campione con una normale allocazione e la relativa liberazione. Il modulo gestisce aggregati del processo. La vista interna dell'heap e i collector continuano a usare i profili glibc dichiarati.
+The importer reads up to 1 MiB. It records valid byte counts, missing metrics, and the SHA-256 of the source file. `examples/jemalloc_stats_lab.c` produces a sample by allocating and freeing a block. This importer reports process-wide aggregates. The debugger's heap views and collectors use the declared glibc profiles.
 
-## Rivedere una funzione in Ghidra
+## Review a function in Ghidra
 
-1. Aggiungere `integrations/ghidra` alle directory dello Script Manager di Ghidra e aprire il proprio programma.
-2. Posizionare il cursore in una funzione ed eseguire `RessemblyReview.java`. Scegliere **export** e un nuovo file JSON.
-3. Aprire il JSON nel viewer per leggere nome programma, linguaggio, funzione qualificata e hash.
-4. Per riprendere la revisione, eseguire lo script in Ghidra, scegliere **open** e indicare il JSON. Lo script confronta hash e linguaggio e risolve un nome univoco nel programma prima di spostare il cursore.
+1. Add `integrations/ghidra` to Ghidra's Script Manager directories and open your program.
+2. Place the cursor inside a function and run `RessemblyReview.java`. Choose **export** and select a new JSON file.
+3. Open the JSON in the viewer to see the program name, language, qualified function name, and hash.
+4. To resume review, run the script in Ghidra, choose **open**, and select the JSON. The script checks the hash and language and resolves a unique function name before moving the cursor.
 
-Lo scambio è manuale e riguarda la selezione statica. L'export contiene cinque campi testuali. Hash errati, nomi assenti o ambigui, campi duplicati e file già esistenti sono rifiutati. Il programma aperto resta in lettura. Le API del dialogo e della navigazione sono descritte nella [documentazione di GhidraScript](https://ghidra.re/ghidra_docs/api/ghidra/app/script/GhidraScript.html).
+The exchange is manual and limited to a static selection. The export has five text fields. The script rejects mismatched hashes, absent or ambiguous function names, duplicate fields, and existing export destinations. It leaves the program contents unchanged. The [GhidraScript documentation](https://ghidra.re/ghidra_docs/api/ghidra/app/script/GhidraScript.html) covers the dialog and navigation APIs.
 
-## Collaudi del 21 novembre 2026
+## Validation on November 21, 2026
 
-| Funzione | Prova eseguita |
+| Feature | Test performed |
 |---|---|
-| Processi e thread | `spawn` e `fork` su macOS ARM64 e Ubuntu AWS x86-64. Tre PID per sessione, legami padre-figlio, due thread distinti per figlio, ordine locale e uscita pulita. |
-| jemalloc | v5.4.0 compilata in una directory temporanea su macOS ARM64. Confrontati i sei contatori importati e lo SHA-256 con l'export reale del programma C. |
-| Ghidra | 12.1.4 con JDK 21, in headless. Export e riapertura di un ELF didattico x86-64. Rifiuti verificati per hash diverso, campo duplicato e destinazione già esistente. |
-| Windows e ARM64 Linux | Export statico Ghidra del simbolo di prova da un oggetto COFF x86-64 e da un oggetto ELF ARM64 compilati sul Mac. Per i backend restano aperti i collaudi su Windows e Linux ARM64 effettivi. |
-| Viewer | Import di una timeline fork reale, della statistica jemalloc e della selezione esportata da Ghidra. Controllate le viste per processo, le coppie di eventi, i dati visualizzati e l'azzeramento. |
+| Processes and threads | `spawn` and `fork` on macOS ARM64 and Ubuntu x86-64 on AWS. Verified three distinct PIDs per session, parent-child links, two distinct threads per child, per-process event order, and clean exits. |
+| jemalloc | Built 5.4.0 in a temporary directory on macOS ARM64. Compared all six imported counters and the source SHA-256 with the C program's actual JSON export. |
+| Ghidra | Ghidra 12.1.4 with JDK 21 in headless mode. Exported and reopened a selection on an owned x86-64 ELF fixture. Verified rejection of a mismatched hash, duplicate field, and existing output file. |
+| Windows and Linux ARM64 artifact formats | Exported a static selection from an x86-64 COFF object and an ARM64 ELF object compiled on the Mac. Debugger backends still need runtime tests on the corresponding systems. |
+| Viewer | Imported an actual fork timeline, jemalloc statistics, and a selection exported from Ghidra. Verified per-process views, paired events, displayed values, and clearing the view. |
 
-I rapporti sono in `work/r11-diagnostics/`. Restano aperti la prova dei dialoghi Ghidra sul desktop, la sincronizzazione continua e il controllo live del debugger nella GUI.
-
-Il pacchetto locale 0.9.0 include il comando `python3 -B scripts/ressembly-diagnostics.py viewer`. Il comando stampa l'indirizzo locale e serve solo le risorse del viewer. La [guida del pacchetto](DIAGNOSTICS-PACKAGE.md) descrive il percorso dall'estrazione al primo rapporto.
+The Ghidra desktop dialogs, continuous synchronization, and live debugger controls remain open. The viewer command prints its loopback address and serves the viewer assets. The [package guide](DIAGNOSTICS-PACKAGE.md) covers extraction and your first report.

@@ -1,18 +1,18 @@
 # Ressembly Diagnostics 0.9.0
 
-Pacchetto locale GPL-3.0-or-later per la diagnostica di applicazioni e la consultazione di acquisizioni. Occorre Python 3.9 o successivo. Ghidra serve solo per lo scambio di selezioni statiche.
+A GPL-3.0-or-later package for application diagnostics and local report review. It requires Python 3.9 or later. Ghidra is required only to exchange static function selections.
 
-Scarica il [pacchetto ZIP](downloads/ressembly-diagnostics-0.9.0-local.zip) e controlla il [checksum SHA-256](SHA256SUMS). Estrai lo ZIP e apri un terminale nella cartella estratta. Il [rapporto pubblico](VALIDATION.md) riassume le prove.
+Download the [ZIP](downloads/ressembly-diagnostics-0.9.0-local.zip), check its [SHA-256](SHA256SUMS), and extract it. Open a terminal in the extracted directory. See the [validation report](VALIDATION.md) for the tested scope.
 
 ```sh
 python3 -B scripts/ressembly-diagnostics.py demo processes.json
 python3 -B scripts/ressembly-diagnostics.py viewer
 ```
 
-Apri l'indirizzo indicato dal secondo comando e seleziona `processes.json`. Il viewer ascolta solo su `127.0.0.1`. I file importati restano nel browser. Premi Ctrl+C nel terminale per chiudere il viewer.
+Open the address printed by the second command and select `processes.json`. The viewer listens only on `127.0.0.1`. Imported files stay in the browser. Press Ctrl+C in the terminal to stop the viewer.
 
-Per registrare il percorso con fork su un sistema che lo supporta, usa `demo fork.json --method fork`. Per importare le statistiche JSON di jemalloc usa `jemalloc stats.json summary.json`. Entrambi i comandi vogliono un percorso di output nuovo.
+To record the fork example on a supported system, use the `demo fork.json --method fork` subcommand. To import jemalloc JSON statistics, use `jemalloc stats.json summary.json`. Both commands require a new output path.
 
-La [guida](docs/DIAGNOSTICS.md) descrive gli eventi cooperativi, le statistiche aggregate e lo script Ghidra. I comandi sono stati verificati su macOS ARM64 e Linux x86-64 nel perimetro dei rapporti. L'uso su Windows o Linux ARM64 richiede una prova sul sistema effettivo.
+The [diagnostics guide](docs/DIAGNOSTICS.md) covers cooperative events, aggregate statistics, and the Ghidra script. The commands were tested on macOS ARM64 and Linux x86-64 within the reported scope. Runtime validation on Windows and Linux ARM64 is still open.
 
-Il pacchetto comprende la timeline cooperativa, il riepilogo jemalloc, lo scambio manuale di selezioni Ghidra e il viewer. I backend debugger e la raccolta heap concorrente rimangono attività separate della suite.
+This package contains the cooperative timeline, jemalloc summaries, manual Ghidra selection exchange, and the viewer. Debugger backends and concurrent heap history are separate work in the suite roadmap.

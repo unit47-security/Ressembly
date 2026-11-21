@@ -10,3 +10,5 @@ Ressembly Diagnostics 0.9.0 was verified in its declared diagnostic scope.
 - Source validation gate: 189 Python tests and 27 JavaScript tests.
 
 Windows and Linux ARM64 debugger runtimes, the Ghidra desktop dialog, continuous synchronization and live debugger controls remain open.
+
+The English documentation update changed the guides and their manifest hashes. Code and viewer assets in the ZIP are byte-for-byte identical to the tested package. The rebuilt ZIP passed manifest and link checks, and its extracted demo passed both spawn and fork on macOS ARM64.

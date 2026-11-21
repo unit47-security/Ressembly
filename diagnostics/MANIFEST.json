@@ -3,9 +3,9 @@
   "sha256": {
     "LICENSE": "8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903",
     "NOTICE": "e2588f963d633b5051bd42ca71d998fda130bdd7c399b9a971de43259260eb43",
-    "README.md": "d76965373facc4e40011cf1e8f4791c3decd36c768f4e6afb3373ecae7313b2d",
-    "docs/DIAGNOSTICS-PACKAGE.md": "8b121002dc8c9447c34513fcf403dedcdd2c89c1d5f89f6c2e3ab881c9277fac",
-    "docs/DIAGNOSTICS.md": "092bfe53236d6d660c7e9a6949722c35f099a74f664cff7ccb5fac38b10818a1",
+    "README.md": "acabdded3bbad0757731b334eca2d79a542f440f0c3c281f82d80564bd6b0064",
+    "docs/DIAGNOSTICS-PACKAGE.md": "b3bee118031ba687c352eeb705f977241fc494e56ce676b4e23dedb322a0fecc",
+    "docs/DIAGNOSTICS.md": "94539e6316580b3880f935799ba2d978d2cd875c382c5b1046830beb2679406a",
     "examples/jemalloc_stats_lab.c": "a128b02e648738a01d1135b440fb0ef4a3f52e496cb81bacfb39f6f5d6e51e66",
     "examples/static_review_lab.c": "9f4b331fdf36bdc108a28a88bb70e105644cae5b0286c2fada0ac431eb3853b7",
     "integrations/ghidra/RessemblyReview.java": "99e307bac0dbec10f4f3764ec12e6fcec8e8b1ec2b971ddd3b647cde56aafa6c",

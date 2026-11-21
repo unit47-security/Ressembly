@@ -8,7 +8,7 @@ Experimental reverse-engineering and memory-research suite by **UNIT-47**, using
 
 This standalone package records process and thread activity from cooperating applications, imports aggregate jemalloc statistics and exchanges static function selections with Ghidra. Its local viewer reads the resulting reports.
 
-[Download the ZIP](diagnostics/downloads/ressembly-diagnostics-0.9.0-local.zip) · [Quick start](diagnostics/README.md) · [Validation](diagnostics/VALIDATION.md) · [SHA-256](diagnostics/SHA256SUMS)
+[Download the ZIP](diagnostics/downloads/ressembly-diagnostics-0.9.0-local.zip) · [English quick start](diagnostics/README.md) · [Validation](diagnostics/VALIDATION.md) · [SHA-256](diagnostics/SHA256SUMS)
 
 The sections below describe the public debugger alpha 0.6.0.
 
