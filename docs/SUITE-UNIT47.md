@@ -1,83 +1,77 @@
-# Ressembly — suite di reverse engineering UNIT-47
+# Ressembly reverse engineering suite by UNIT-47
 
-Decisione del 24 ottobre 2026. Stato del 13 novembre: **R0, R1, R2 e R3a–R3e implementati e convalidati nel laboratorio Debian x86-64 emulato**. R4 e R5 sono ora implementati nel perimetro del [rapporto R4/R5](PHASES-4-5.md): pacchetto locale GPL-3.0-or-later, cronologia estesa, Ghidra e plugin. R6 estende i profili allocator al build Kali glibc 2.43-4, con [prove e limiti](R6.md); nessuna pubblicazione o prova hardware nativa. [Rapporto completo](PHASES-1-3.md).
+The project adopted this direction on October 24, 2026. As of November 13, **R0, R1, R2, and R3a–R3e were implemented and validated in an emulated Debian x86-64 lab.** R4 and R5 were implemented within the scope of the [R4/R5 report](PHASES-4-5.md), which covers the local GPL-3.0-or-later package, extended history, Ghidra, and plugins. R6 added support for the Kali glibc 2.43-4 build, with [documented tests and limits](R6.md). The November 13 record predates publication. Native hardware tests were still open. See the [full phase report](PHASES-1-3.md).
 
-## Identità e obiettivo
+## Identity and goal
 
-Ressembly è una suite modulare destinata alla distribuzione da parte di UNIT-47, per reverse engineering, ricerca sulle vulnerabilità ed exploit development in laboratori e attività autorizzate.
+Ressembly is a modular suite developed by UNIT-47 for reverse engineering and vulnerability research in authorized environments.
 
-L'obiettivo è offrire un ambiente di lavoro completo e coerente. GEF e Pwndbg sono riferimenti e termini di confronto. Una superiorità rispetto a questi strumenti deve essere misurata, non dichiarata in anticipo. La prima funzione distintiva da valutare è ricostruire la vita degli oggetti in memoria con riferimenti alle osservazioni raccolte.
+The goal is a coherent environment for research. GEF and Pwndbg provide references and comparison points. Claims of superiority require measurements. The first proposed differentiator was a readable lifetime of memory objects with references to recorded observations.
 
-Questa decisione sostituisce la precedente direzione Windows-first C++/Qt e la riduzione del prodotto a un solo strumento di confronto fra esecuzioni. Il prototipo HTML esistente resta un esperimento offline; non è la suite né una sua integrazione funzionante con GDB.
+This decision superseded the earlier Windows-first C++/Qt plan and broadened the scope beyond comparing runs. The existing HTML prototype demonstrates the offline workflow. Operational GDB integration is provided separately.
 
-## Architettura proposta
+## Proposed architecture
 
-- Motore iniziale: GDB su Linux x86-64, con Kali come ambiente di distribuzione da verificare.
-- Adattatore: estensione Python che raccoglie dati tramite le API del debugger.
-- Nucleo indipendente dal debugger: identità degli oggetti, validazione, eventi, confronti ed esportazione; testabile offline.
-- Interfaccia iniziale: comandi nel terminale, contesto leggibile e navigazione delle evidenze.
-- Moduli separati con contratti espliciti, per aggiungere analisi senza riscrivere il nucleo.
-- Nessuna dipendenza obbligatoria da GEF; eventuale coesistenza deve essere collaudata, non presunta.
+- Initial engine: GDB on Linux x86-64, with Kali evaluated as a deployment environment.
+- Adapter: A Python extension that collects data through debugger APIs.
+- Debugger-independent core: Object identity, validation, events, comparisons, and export, testable offline.
+- Initial interface: Terminal commands, readable context, and navigation through evidence.
+- Separate modules with explicit contracts so new analyses can be added without rewriting the core.
+- GEF is optional. Running both tools together requires testing.
 
-Windows, altri debugger, altre architetture e un'interfaccia grafica restano estensioni successive da valutare. La prima versione non dipende da un servizio web o da un modello IA.
+Windows, other debuggers, other architectures, and a graphical interface remained extensions to evaluate. The first version requires no web service or AI model.
 
-## Componenti della suite
+## Suite components
 
-| Componente previsto | Responsabilità |
+| Component | Responsibility |
 |---|---|
-| Contesto di debugging | Assembly, registri, stack, mappe e posizioni correnti |
-| Esplorazione della memoria | Regioni selezionate, ricerca, puntatori e annotazioni |
-| Vita degli oggetti | Allocazioni, liberazioni, riutilizzi e accessi effettivamente osservati |
-| Esperimenti | Input, ambiente, snapshot, confronti, note e riferimenti |
-| Estensioni | Adattatori e moduli con versioni e capacità dichiarate |
+| Debugger context | Assembly, registers, stack, maps, and current locations |
+| Memory exploration | Selected regions, search, pointers, and annotations |
+| Object lifetime | Allocations, frees, address reuse, and observed accesses |
+| Experiments | Inputs, environment, snapshots, comparisons, notes, and references |
+| Extensions | Adapters and modules with declared versions and capabilities |
 
-I moduli iniziali fino a R3 sono disponibili nei limiti di [R3.md](R3.md); estensioni e copertura generale restano future.
+The initial modules through R3 are available within the limits of [R3.md](R3.md). Broader coverage remained separate work.
 
-## Primo esperimento tecnico
+## First technical experiment
 
-Su un programma C nostro, Linux x86-64, processo e thread singoli, allocator glibc e versioni dichiarate:
+Use a project-owned C fixture on Linux x86-64 with one process, one thread, and a documented glibc build. The experiment checks whether a report can distinguish a new allocation from an earlier object at the same address. It records selected allocator operations and separate, bounded memory observations, then displays the resulting timeline with its coverage limits.
 
-1. Osservare un insieme esplicito di operazioni di allocazione e liberazione.
-2. Assegnare una nuova identità a ogni allocazione: lo stesso indirizzo riutilizzato non identifica lo stesso oggetto.
-3. Selezionare un oggetto e una porzione limitata da osservare.
-4. Registrare gli accessi intercettati con posizione del codice e contesto disponibile.
-5. Mostrare una cronologia leggibile insieme ai limiti di acquisizione.
+Allocator events and memory writes are distinct. Watchpoints have limits on count and size, and unrecorded writes remain unknown. Broader instrumentation requires a backend decision and overhead measurements.
 
-Non si presume che un hook sull'allocator catturi le scritture. I watchpoint hanno limiti di numero e dimensione: la copertura effettiva deve essere esplicita. Le scritture non registrate restano ignote. Una futura strumentazione più ampia richiederà misure di overhead e una scelta separata del backend.
+Each event should preserve the target and build identity, run, collection order, thread, type, related object, raw address, code location if known, and provenance. Module and offset identities can help compare code locations. Heap and stack pointers are meaningful within their recorded runs.
 
-Ogni evento deve conservare almeno identità del target/build, esecuzione, ordine di acquisizione, thread, tipo, oggetto interessato, indirizzo grezzo, posizione del codice se nota e provenienza. L'identità modulo/offset aiuta a confrontare posizioni del codice; non rende automaticamente confrontabili puntatori heap o stack fra esecuzioni.
+An observation made after a free requires checking for intervening reallocations. A single observation is insufficient to establish exploitability, and missing events leave the corresponding accesses unknown.
 
-Un accesso osservato dopo una liberazione è un elemento da esaminare considerando eventuali riallocazioni; non dimostra da solo la sfruttabilità. L'assenza di un evento non dimostra l'assenza di un accesso.
+## Milestones and acceptance criteria
 
-## Traguardi e criteri di accettazione
+[ROADMAP.md](ROADMAP.md) records the November 13, 2026 plan, expected results, dependencies, environment, and completion evidence. [BACKLOG.md](BACKLOG.md) breaks the phases into tasks. [VERIFICA.md](VERIFICA.md) records the checks actually performed.
 
-La fonte operativa corrente è [ROADMAP.md](ROADMAP.md), aggiornata il 13 novembre 2026, con risultati attesi, dipendenze, ambiente e prove di completamento. [BACKLOG.md](BACKLOG.md) traduce le fasi in piccoli task; [VERIFICA.md](VERIFICA.md) registra solo le verifiche realmente eseguite.
+- **R0:** Practical comparison of the tools. Completion requires hands-on testing beyond the documentation review.
+- **R1:** Core and minimal collection. R1a and R1b were validated in the emulated lab, with evidence and independent repeats for reliability and negative cases.
+- **R2:** Selected malloc and free tracking and one observed region, with separate records for allocator events and observed value changes.
+- **R3:** Debugger context, memory exploration, a declared heap profile, ELF inspection and pattern utilities, and persistent experiments. These were validated in the initial scope, including integration and independent review.
+- **R4:** Installable local UNIT-47 alpha with explicit license and compatibility. Publication required a separate request.
+- **R5:** calloc and realloc history, four regions, an offline Ghidra bridge, and trusted local plugins, all with documented limits.
+- **R6:** A glibc 2.43 profile with layout-specific handling, glibc 2.36 regression, and a temporary lab under 3 GB.
 
-- **R0:** confronto pratico degli strumenti; la ricognizione documentale non lo completa.
-- **R1:** nucleo e acquisizione minima; R1a/R1b sono convalidate nel laboratorio emulato; affidabilità e casi negativi hanno dossier e replay indipendente.
-- **R2:** tracciamento selettivo malloc/free e regione osservata, separando eventi allocator e cambiamenti realmente intercettati.
-- **R3:** contesto debugger, esplorazione memoria, heap dichiarato, strumenti exploit-lab ed esperimenti persistenti: tutti convalidati nel perimetro iniziale dichiarato, inclusa integrazione e revisione indipendente.
-- **R4:** alfa locale installabile UNIT-47 con compatibilità e licenza esplicite; pubblicazione solo su richiesta.
-- **R5:** cronologia calloc/realloc e quattro regioni, Ghidra offline e plugin locali fidati; implementati con limiti espliciti.
-- **R6:** profilo allocator glibc 2.43, layout e ritorni specifici, regressione 2.36 e laboratorio temporaneo entro 3 GB.
+The roadmap requires checks for address reuse, missing reads, interruption, limited resources, compatibility, and review of results. Estimates are preliminary budgets.
 
-La roadmap corrente conserva i gate di riuso indirizzi, letture mancanti, interruzione, risorse limitate, compatibilità e revisione delle conclusioni. Le stime sono budget preliminari, non date promesse.
+## Relationship to other projects
 
-## Relazione con gli altri progetti
+FaultCore handles crash reproduction and minimization. Ressembly studies execution and memory during analysis. RoleDiff compares permissions. LOLDEX is outside UNIT-47. Any data exchange requires a documented contract.
 
-FaultCore mantiene riproduzione e minimizzazione dei crash. Ressembly studia l'esecuzione e la memoria durante l'analisi. RoleDiff mantiene il confronto delle autorizzazioni. LOLDEX resta esterno a UNIT-47. Eventuali scambi di dati richiedono contratti verificabili, non accorpamenti automatici dei progetti.
+## Verified status
 
-## Stato verificabile
+The HTML prototype uses synthetic data and works offline. The GDB/Python backend includes R1, R2, and R3 and runs independently of GEF, Pwndbg, and Daybreak. [PHASES-1-3.md](PHASES-1-3.md) records the tests and limits. [R3.md](R3.md) describes the supported workflow. The R1 marker adapter remains a separate historical demonstration. R2 records selected malloc and free operations without allocator markers. The suite loader keeps allocator operations distinct from observed value changes.
 
-Il prototipo HTML resta offline e sintetico. Il backend GDB/Python operativo comprende i moduli R1/R2/R3, indipendenti da GEF/Pwndbg e senza Daybreak. [PHASES-1-3.md](PHASES-1-3.md) registra prove reali e limiti; [R3.md](R3.md) fornisce il percorso d'uso. L'adattatore marker R1 rimane una prova storica separata; la cronologia R2 intercetta malloc/free selettive senza marker allocator. Il loader suite integra i moduli correnti e conserva gli eventi allocator separati dai cambiamenti di valore realmente osservati.
+Phase 3 includes R3a through R3e. The earlier informal label that equated it with R2 was incomplete. R4/R5 added limited Kali checks for general modules and has separate evidence and limits. The historical tests establish the declared scope. Broader product maturity, comparative advantages, and native hardware remain outside that evidence.
 
-La precedente corrispondenza informale “fase 3 = R2” era incompleta rispetto alla richiesta. La chiusura corrente include tutto R3a–R3e. Il rapporto storico non attestava Kali; la matrice R4/R5 lo aggiunge limitatamente ai moduli generali. Non attesta una suite matura, superiorità o hardware nativo. R4/R5 hanno evidenze e limiti separati e la pubblicazione non è autorizzata implicitamente.
+## Initial comparison sources
 
-## Fonti di confronto iniziali
-
-- Pwndbg: https://github.com/pwndbg/pwndbg e https://github.com/pwndbg/pwndbg/releases
+- Pwndbg: https://github.com/pwndbg/pwndbg and https://github.com/pwndbg/pwndbg/releases
 - GEF: https://github.com/hugsy/gef
 - Tenet: https://github.com/gaasedelen/tenet
 - Ghidra Debugger: https://ghidra.re/ghidra_docs/GhidraClass/Debugger/A6-MemoryMap.html
 
-Le fonti identificano strumenti e capacità da confrontare; non costituiscono una validazione della domanda di mercato.
+These sources identify tools and capabilities for comparison. Market demand requires separate evidence.

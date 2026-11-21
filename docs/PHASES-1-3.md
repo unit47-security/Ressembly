@@ -1,69 +1,69 @@
-# Ressembly — chiusura fino a R3 inclusa
+# Ressembly: completion through R3
 
-13 novembre 2026. Copia di lavoro: `/Users/user/Documents/ChatGPT/Ressembly`.
+November 13, 2026. Working copy: `/Users/user/Documents/ChatGPT/Ressembly`.
 
-**R0, R1, R2 e tutti i moduli R3a–R3e sono implementati e convalidati nel perimetro del laboratorio dichiarato.** R4 (pacchetto alfa locale) non è incluso. La precedente dichiarazione “fasi 1–3” corrispondeva erroneamente a R1/R0/R2: lasciava fuori R3. Questo rapporto la sostituisce senza alterare o cancellare i risultati precedenti.
+**R0, R1, R2, and all R3a–R3e modules were implemented and validated within the stated lab scope.** R4, the local alpha package, was outside that scope. The earlier “phases 1–3” label incorrectly referred to R1/R0/R2 and omitted R3. This report supersedes that label and retains the earlier results.
 
-## Risultati verificati
+## Verified results
 
-| Modulo | Consegna effettiva | Prove finali |
+| Module | Delivery | Final tests |
 |---|---|---|
-| R0 | Confronto pratico GDB/GEF/Pwndbg su tre laboratori e controlli | 30 sessioni selezionate + 30 indipendenti, già conservate |
-| R1a/R1b | Collector marker, JSON/terminale, errori, interruzioni e separazione dei run | 16 + 16 prove precedenti; altre 16 di regressione dopo R3 |
-| R2a/R2b | malloc/free selettivi senza marker allocator, generazioni, regione hardware | 22 + 22 prove precedenti, oracolo separato e tre smoke di ampiezza; altre 22 di regressione dopo R3 |
-| R3a/R3b | Assembly, breakpoint, registri, stack, mappe, dump, ricerca, catene | Tre sessioni GDB + tre indipendenti; 117 asserzioni sul target con simboli e 117 sullo stripped per esecuzione, più rifiuto senza target |
-| R3c | Vista strutturale chunk/main_arena/fastbin/bin/tcache | 13 sessioni + 13 indipendenti; quattro prove Linux supplementari |
-| R3d | Pattern, offset e proprietà ELF | 44 controlli + 44 indipendenti; 18 prove indipendenti supplementari |
-| R3e | Input, snapshot, note, confronti, export e riapertura | 14 controlli + 14 indipendenti sul codice finale; riapertura da secondo revisore in processo separato, 10 controlli |
-| Integrazione R2/R3 | Loader unico, collector e viste contemporanei, dossier integrato | Due sessioni × 20 controlli GDB + due sessioni indipendenti × 20; in ciascuna ulteriori controlli di uscita, generazioni, free ed export; conflitto con marker storico rifiutato |
+| R0 | Practical comparison of GDB, GEF, and Pwndbg across three lab cases and their controls | 30 selected sessions and 30 independent repeats, all retained |
+| R1a/R1b | Marker collector, JSON and terminal output, error and interruption handling, and separation of runs | 16 original and 16 independent tests, plus 16 regression tests after R3 |
+| R2a/R2b | Selected malloc/free collection without allocator markers, object generations, and a hardware observation region | 22 original and 22 independent tests, a separate oracle, and three width spot checks, plus 22 regression tests after R3 |
+| R3a/R3b | Assembly, breakpoints, registers, stack, maps, memory dumps, searches, and chains | Three sessions and three independent repeats. Each run checked 117 assertions on the symbolized target and 117 on the stripped target, plus rejection with no target loaded |
+| R3c | Structural views of chunks, main_arena, fastbins, bins, and tcache | 13 original and 13 independent sessions, plus four additional Linux tests |
+| R3d | Pattern utilities, offsets, and ELF properties | 44 original and 44 independent checks, plus 18 additional independent checks |
+| R3e | Inputs, snapshots, notes, comparisons, export, and reopening | 14 original and 14 independent checks on the final code. A second reviewer reopened the data in a separate process and performed 10 checks |
+| R2/R3 integration | One loader, simultaneous use of collector and views, and a combined dossier | Two sessions with 20 GDB checks each, plus two independent repeats with 20 checks each. Each session also verified exit, generations, free events, export, and rejection of a conflict with the historical marker collector |
 
-Non sommare asserzioni, test unitari e sessioni come se fossero programmi o utilizzatori distinti. La riapertura da secondo revisore è stata eseguita da un agente separato; non è uno studio di usabilità su persone, previsto eventualmente per R4.
+Assertions, unit tests, and sessions count different things. The second reopening check was performed by a separate agent. A human usability study was considered for R4.
 
-**Test locali finali: 67 Python e 14 JavaScript, tutti superati.** Le prove offline non sostituiscono GDB/Linux. Mutazioni intenzionali in copie separate hanno dimostrato che i test rilevano errori nelle generazioni, terminazione di catene, classificazione PIE e coerenza delle build. Non è un mutation score completo. La prova di 1000 mutazioni ELF è un controllo limitato del parser, non fuzzing esaustivo.
+**Final local tests: 67 Python and 14 JavaScript, all passed.** These offline checks complement the GDB/Linux runs. Deliberate mutations in separate copies showed that the tests detected errors in object generations, chain termination, PIE classification, and build consistency. The tests did not measure a full mutation score. The 1,000 ELF mutations exercised a limited parser check.
 
-## Ambiente e confini
+## Environment and boundaries
 
-- Host Mac ARM64, QEMU 11.1.3 full-system TCG estratto localmente.
-- Guest Debian 12 x86-64, kernel 6.1.0-54-cloud-amd64, glibc 2.36, GCC 12.2.0, binutils 2.40.
-- R1/R2/R3: GDB 13.1, Python GDB 3.11.2. R0 usa il runtime comune GDB 18.1/Python 3.13.11 e revisioni dei comparatori fissate nei dossier.
-- Un processo e un thread; vista heap iniziale per una sola arena, glibc 2.36 e simboli di debug corrispondenti.
+- ARM64 Mac host with a locally extracted QEMU 11.1.3 full-system TCG runtime.
+- Debian 12 x86-64 guest with kernel 6.1.0-54-cloud-amd64, glibc 2.36, GCC 12.2.0, and binutils 2.40.
+- R1/R2/R3 used GDB 13.1 with embedded Python 3.11.2. R0 used a shared GDB 18.1/Python 3.13.11 runtime with comparison tool revisions pinned in the dossiers.
+- One process and one thread. The initial heap view covers one arena with glibc 2.36 and matching debug symbols.
 
-È Linux/GDB reale dentro un guest emulato x86-64. **Non certifica Kali, hardware nativo, prestazioni fisiche, multi-thread o altri allocator/debugger.** Nessuna superiorità o innovazione dimostrata rispetto ai concorrenti. GEF/Pwndbg restano comparatori, non dipendenze.
+The tests ran actual Linux and GDB inside an emulated x86-64 guest. **Kali, native hardware, physical performance, multithreading, and other allocators or debuggers remain outside this validation scope.** GEF and Pwndbg were comparison tools. The results establish no competitive advantage or novelty.
 
-Il prototipo HTML resta offline con dati sintetici. Il codice GDB/Python è distinto dal prototipo. Sono implementati i moduli iniziali previsti fino a R3, non una suite matura equivalente in ampiezza a GEF/Pwndbg né una release installabile già distribuita.
+The offline HTML prototype retains its synthetic data. The GDB/Python implementation is separate. This milestone covers the initial modules through R3. A mature suite with the breadth of GEF or Pwndbg and a distributed installable release remained future work at this point.
 
-## Interpretazione corretta delle evidenze
+## Interpreting the evidence
 
-L'allocator segnala allocazione/free; solo la regione hardware selezionata produce cambiamenti di valore osservati. Le scritture dello stesso valore possono non apparire. La copertura finisce prima della free e non si trasferisce automaticamente al riuso: il nuovo oggetto ha una nuova generazione. Un PC dopo l'istruzione non è automaticamente l'indirizzo dell'istruzione responsabile.
+Allocator events record allocation and free. Observed value changes cover only the selected hardware region. A write that leaves the same value may be absent. Coverage ends before free and does not carry over automatically when an address is reused. The next object has a new generation. A program counter sampled after an instruction does not by itself identify the instruction responsible for the change.
 
-La vista heap è strutturale e istantanea: `PREV_INUSE` descrive il chunk precedente, non lo stato di vita del corrente. Le catene forward hanno limiti; link backward e nextsize non sono verificati. Memoria, ricerca e puntatori hanno budget espliciti e segnalano dati mancanti.
+The heap view is a structural snapshot. `PREV_INUSE` describes the preceding chunk. Forward chains have limits, and backward and nextsize links are unverified. Memory reads, searches, and pointer walks have explicit budgets and report missing data.
 
-Le protezioni ELF sono proprietà statiche dichiarate; un simbolo canary non prova copertura di tutte le funzioni. Nessun singolo segnale produce un verdetto di vulnerabilità o sfruttabilità.
+Static ELF properties describe the file. A canary symbol does not prove coverage of every function. Individual findings cannot establish a vulnerability or exploitability.
 
-Gli esperimenti si riaprono come dossier, non ripristinano un processo. Input registrati non sono automaticamente input consumati. Build incompatibili e identità interne contraddittorie sono rifiutate. L'ID di processo e l'UUID di cattura hanno domini diversi: confronto `same_run: null` quando non sono direttamente comparabili. Hash e coerenza JSON non autenticano l'origine del dato.
+Reopening an experiment loads its dossier. Recorded inputs may not have been consumed by a process. Imports reject incompatible builds and contradictory internal identities. Process IDs and capture UUIDs belong to different identity domains. A comparison reports `same_run: null` when they cannot be compared directly. Hashes and consistent JSON establish internal consistency only.
 
-## Difetti trovati e corretti
+## Defects found and fixed
 
-I collaudi precedenti hanno corretto quoting di `source`, fusione dei run, exit code dei validatori, registri unsigned, ritorni mancanti, calloc/realloc non supportate e budget dei watchpoint. R3 ha corretto il programma di prova che perdeva i permessi della copia stripped; l'import dei dossier che accettava contraddizioni fra metadati interni ed esterni (contesto e cronologie R1/R2); l'etichetta di confronto fra domini di identità diversi. Ogni correzione ha una verifica successiva; tentativi intermedi e falliti sono conservati, non contati come chiusure finali.
+Earlier validation fixed `source` quoting, run merging, validator exit codes, unsigned register handling, missing returns, unsupported calloc/realloc handling, and watchpoint budgets. R3 fixed a fixture that lost permissions on its stripped copy, a dossier import that accepted contradictory inner and outer metadata for context and R1/R2 histories, and the comparison label used for different identity domains. Each fix was checked afterward. Intermediate and failed attempts remain available as historical records.
 
-## Dossier finali locali
+## Final local dossiers
 
-| Gruppo | Autore | Indipendente |
+| Group | Author run | Independent run |
 |---|---|---|
-| Debugger/memoria | `work/r3-debug-002` | `work/r3-debug-independent-001` |
-| Heap strutturale | `work/r3-heap-002` | `work/r3-heap-independent-001` |
-| Strumenti lab | `work/r3-labtools-001` | `work/r3-labtools-independent-001` |
-| Esperimenti | `work/r3-experiments-004` | `work/r3-experiments-independent-003` |
-| Suite integrata | `work/r3-suite-003` | `work/r3-suite-independent-002` |
+| Debugger and memory | `work/r3-debug-002` | `work/r3-debug-independent-001` |
+| Structural heap | `work/r3-heap-002` | `work/r3-heap-independent-001` |
+| Lab utilities | `work/r3-labtools-001` | `work/r3-labtools-independent-001` |
+| Experiments | `work/r3-experiments-004` | `work/r3-experiments-independent-003` |
+| Integrated suite | `work/r3-suite-003` | `work/r3-suite-independent-002` |
 
-Aggiuntivi: `work/r3-heap-review-probes-002`, `work/r3-labtools-review-probes-001`, `work/review-r3-experiments`, `work/r3-integration-review-002`. Regressioni: `work/r3-r1-regression-001`, `work/r3-r2-regression-001`. Riepilogo e hash: `work/r3-gates/`.
+Additional dossiers: `work/r3-heap-review-probes-002`, `work/r3-labtools-review-probes-001`, `work/review-r3-experiments`, and `work/r3-integration-review-002`. Regression dossiers: `work/r3-r1-regression-001` and `work/r3-r2-regression-001`. Summary and hashes: `work/r3-gates/`.
 
-Dossier precedenti conservati: `work/validation/r1-validation-005`, `r1-independent-001`, `r0/`, `r0-independent/`, `r2-validation-003`, `r2-independent-001`, `r2-primitive-oracle-001`, `r2-widths/`. Il precedente `work/gates/acceptance.json` copriva R0/R1/R2, non R3.
+Retained earlier dossiers under `work/validation/` include `r1-validation-005`, `r1-independent-001`, `r0/`, `r0-independent/`, `r2-validation-003`, `r2-independent-001`, `r2-primitive-oracle-001`, and `r2-widths/`. The earlier `work/gates/acceptance.json` covered R0/R1/R2.
 
-Guida d'uso e riproduzione: [R3.md](R3.md). Procedure dettagliate: [R1](R1-VALIDATION.md), [R0](R0-RESULTS.md), [R2](R2.md), [debug/memoria](R3-DEBUG.md), [heap](R3-HEAP.md), [lab](R3-LABTOOLS.md), [esperimenti](R3-EXPERIMENTS.md).
+Usage and reproduction guide: [R3.md](R3.md). Detailed records: [R1](R1-VALIDATION.md), [R0](R0-RESULTS.md), [R2](R2.md), [debugger and memory](R3-DEBUG.md), [heap](R3-HEAP.md), [lab utilities](R3-LABTOOLS.md), and [experiments](R3-EXPERIMENTS.md).
 
-## Conservazione e prossimo confine
+## Retention and next milestone
 
-Originale `/Users/user/Documents/Codex/Projects/Ressembly`, prototipo e file storici sono conservati. Nessuna dipendenza Daybreak, servizio a pagamento, IA obbligatoria, push, pubblicazione o configurazione globale del Mac. La VM e i dossier restano locali; la VM è stata spenta ordinatamente, con processo terminato e conferma nel registro seriale (`work/r3-gates/lab-final-state.json`). `work/` contiene anche credenziali esclusivamente del laboratorio e immagini: è esclusa dai file da distribuire.
+The original at `/Users/user/Documents/Codex/Projects/Ressembly`, the prototype, and the historical files were retained. This milestone introduced no Daybreak dependency, paid service, mandatory AI, publication, push, or global Mac configuration change. The local VM shut down cleanly. Its process exited, and the serial log confirms this in `work/r3-gates/lab-final-state.json`. `work/` contains lab-only credentials and images and is excluded from distribution.
 
-**Prossimo traguardo separato: R4**, pacchetto alfa locale, installazione/disinstallazione pulita, matrice Kali da verificare, guida e scelta della licenza. Non è stato avviato automaticamente e non implica autorizzazione alla pubblicazione.
+**The next milestone was R4.** It covered a local alpha package, clean installation and removal, a Kali compatibility matrix, a guide, and a license decision. It was a separate milestone requiring its own validation and publication approval.

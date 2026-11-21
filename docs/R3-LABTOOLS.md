@@ -1,49 +1,37 @@
-# R3d — strumenti locali per laboratori
+# R3d — local lab utilities
 
-Perimetro: pattern ciclico, ricerca degli offset e proprietà statiche ELF64 little-endian x86-64. Non sono un generatore di exploit e non attribuiscono sfruttabilità. Il modulo usa solo la libreria standard Python; il collaudo Linux usa GCC, GNU readelf e strip già presenti nel laboratorio.
+This milestone covers cyclic-pattern and offset utilities and static inspection of little-endian x86-64 ELF64 files. The Python module uses the standard library. Linux validation used GCC and the GNU readelf and strip tools already available in the lab.
 
-## Uso
+## Static ELF inspection
 
-Dalla radice del progetto:
+From the repository root, inspect a file without running it:
 
 ```sh
-python3 scripts/ressembly-lab.py pattern 128 --width 4 --output work/pattern-new.bin
-python3 scripts/ressembly-lab.py offset --integer 0x61616162 --length 128 --width 4 --endian little
-python3 scripts/ressembly-lab.py offset --hex 62616161 --length 128 --width 4
 python3 scripts/ressembly-lab.py elf work/validation-example/binary
 ```
 
-Il primo comando crea un file nuovo e rifiuta la sovrascrittura. Senza `--output` scrive i byte senza newline. Un offset è espresso in byte, da zero. La query intera viene convertita nella larghezza ed endian indicati: nessuna troncatura implicita. La query esadecimale è già una sequenza di byte e non viene invertita. Riutilizzare identici lunghezza, larghezza e alfabeto del pattern originale.
+The parser accepts amd64 ET_EXEC and ET_DYN files up to 64 MiB, with at most 1,024 program headers, 8,192 sections, and 100,000 symbols. It rejects extended numbering, other architectures, ELF32, and big-endian inputs. Bounds and resource limits apply. The parser does not replace a full ELF validator or the system loader.
 
-La sequenza di de Bruijn non viene ripetuta. Limiti: 1 MiB, larghezze 2–8, alfabeto di 2–64 byte distinti; la CLI accetta un alfabeto ASCII. La ricerca riguarda soltanto il prefisso richiesto e riporta `unique`, `ambiguous` o `not_found`. Una query più corta della larghezza può essere ambigua. Sono conservati al massimo 100 offset, con un flag esplicito se ne esistono altri. Nessun risultato significa che i byte non compaiono nel prefisso cercato, non che un crash non sia controllabile.
+- **PIE:** ET_DYN with DF_1_PIE yields `yes`. ET_EXEC yields `no`. ET_DYN without that flag yields `undetermined`, including shared libraries without the flag.
+- **Stack and NX:** The executable flag on PT_GNU_STACK is an on-disk property. A missing header yields `unknown`. `nx_stack=yes` records a request for a non-executable stack. Runtime permissions depend on the environment.
+- **RELRO:** PT_GNU_RELRO with immediate binding yields `full_configuration`. The segment alone yields `partial_configuration`. Declared ELF settings do not establish the loader's applied permissions.
+- **Canary:** The parser distinguishes defined and undefined stack protector symbols. Symbol presence does not establish that every function is instrumented. A missing symbol table yields `unknown_no_symbol_tables`.
 
-## Proprietà ELF e limiti
+The report records SHA-256 and byte size for the file it read. That information does not authenticate the file's origin. Runtime ASLR, CET, fortify, dependency behavior, and bypasses are outside the stated scope.
 
-Il parser non avvia il binario. Accetta ET_EXEC/ET_DYN amd64, massimo 64 MiB, 1024 program header, 8192 sezioni, 100000 simboli complessivi. Numerazione estesa, altre architetture, ELF32 e big-endian sono rifiutati. Le letture hanno controlli di intervallo e budget; il parser non sostituisce un validatore ELF completo o il loader del sistema.
+## Pattern utility scope
 
-- **PIE:** `yes` richiede ET_DYN e DF_1_PIE; ET_EXEC produce `no`; ET_DYN senza il flag produce `undetermined`, evitando di scambiare una libreria condivisa per un eseguibile PIE.
-- **Stack/NX:** il bit eseguibile di PT_GNU_STACK è una proprietà del file; header assente produce `unknown`. `nx_stack=yes` significa richiesta di stack non eseguibile, non una misura dell'effettiva protezione runtime o delle altre mappe.
-- **RELRO:** PT_GNU_RELRO e binding immediato (DT_BIND_NOW/DF_BIND_NOW/DF_1_NOW) producono `full_configuration`; solo segmento RELRO produce `partial_configuration`. Sono configurazioni dichiarate, non una verifica dei permessi applicati dal loader.
-- **Canary:** si registrano i simboli `__stack_chk_fail`, `__stack_chk_fail_local`, `__stack_chk_guard`, distinti fra definiti e indefiniti. `symbol_present` non dimostra strumentazione di ogni funzione. `not_observed` non dimostra assenza di stack protector. Senza tabelle simboli il risultato è `unknown_no_symbol_tables`.
+The utilities support a bounded prefix of a non-repeating de Bruijn sequence. Offsets are measured in bytes from zero. Integer queries use an explicit width and byte order. Hexadecimal byte sequences preserve their ordering. Search results distinguish unique, ambiguous, and missing matches, with an explicit flag when more than 100 matches exist. A result describes the searched prefix.
 
-SHA-256 e dimensione identificano il file letto, senza autenticarne l'origine. Non sono analizzati ASLR runtime, CET, fortify, librerie dipendenti o possibili bypass.
+## Repeatable validation
 
-## Convalida ripetibile
+The 11 offline tests check known vectors, uniqueness over small cycles, byte order, ambiguous matches, bounds, incomplete headers, and CLI behavior. On Linux, the lab compares file properties with GNU readelf using executable and library fixtures with different configurations, including stripped and missing-section-table cases. Missing and malformed inputs are rejected. The dossier records source hashes, tool versions, invocations, status codes, and raw comparison outputs.
 
-```sh
-python3 -m unittest discover -s tests -p test_labtools.py -v
-python3 scripts/validate-labtools-linux.py work/r3-labtools-new
-```
+The author run in `work/r3-labtools-001/validation.json` passed **44 checks**, including the 11 offline tests. The environment was Debian 12 x86-64 emulated with QEMU TCG, kernel 6.1.0-54-cloud-amd64, GCC 12.2.0, binutils 2.40, and Python 3.11.2. The binaries were inspected statically. A separate mutation that misclassified all ET_DYN files as PIE was detected by the shared-library test. An independent repeat passed the same 44 checks in `work/r3-labtools-independent-001`. Another 18 checks are recorded in `work/r3-labtools-review-probes-001`.
 
-Il secondo comando richiede Linux x86-64 e una directory nuova. Compila il programma C nostro con quattro configurazioni (PIE/canary/full RELRO, non-PIE/partial RELRO, stack eseguibile/no RELRO, libreria condivisa), aggiunge una copia stripped e confronta il parser con gli header, segmenti, dynamic tag e simboli di GNU readelf. Una copia senza section header conserva le proprietà dei segmenti ma dichiara copertura simboli ignota. Input malformato e percorso mancante sono rifiutati. Il dossier conserva comandi, codici di uscita, output raw, proprietà, versioni, risultati e hash dei sorgenti.
+## Primary sources reviewed on November 13, 2026
 
-Gli 11 test offline verificano vettori noti, unicità delle finestre su cicli piccoli completi, endian, query ambigue, limiti, header incompleti e CLI. Non costituiscono da soli convalida Linux.
-
-Convalida autore eseguita: `work/r3-labtools-001/validation.json`, **44 controlli superati**, inclusa la ripetizione degli 11 test offline. Ambiente: Debian 12 x86-64 emulato QEMU TCG, kernel 6.1.0-54-cloud-amd64, GCC 12.2.0, binutils 2.40, Python 3.11.2. Il dossier è conservato anche sul Mac; i binari sono stati analizzati staticamente, non eseguiti. La mutazione in una copia separata che classificava ogni ET_DYN come PIE è stata intercettata dal test relativo alle librerie condivise (`work/r3-labtools-mutation/result.txt`). Il replay indipendente `work/r3-labtools-independent-001` supera gli stessi 44 controlli; altri 18 controlli indipendenti su pattern e proprietà ELF sono in `work/r3-labtools-review-probes-001`.
-
-## Fonti primarie verificate il 13 novembre 2026
-
-- [GNU ld, opzioni relro, now, execstack, noexecstack](https://sourceware.org/binutils/docs/ld/Options.html).
-- [GNU readelf, header, segmenti, dynamic e simboli](https://sourceware.org/binutils/docs/binutils/readelf.html).
-- [GCC, opzioni stack protector](https://gcc.gnu.org/onlinedocs/gcc/Instrumentation-Options.html).
-- [glibc 2.36, strutture e costanti ELF](https://raw.githubusercontent.com/bminor/glibc/release/2.36/master/elf/elf.h).
+- [GNU ld options](https://sourceware.org/binutils/docs/ld/Options.html)
+- [GNU readelf](https://sourceware.org/binutils/docs/binutils/readelf.html)
+- [GCC instrumentation options](https://gcc.gnu.org/onlinedocs/gcc/Instrumentation-Options.html)
+- [glibc 2.36 ELF structures and constants](https://raw.githubusercontent.com/bminor/glibc/release/2.36/master/elf/elf.h)

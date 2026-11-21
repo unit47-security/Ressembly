@@ -1,50 +1,37 @@
-# R0 — corpus di confronto
+# R0 — comparison corpus
 
-Programmi nostri in `examples/r0/memory_cases.c`, singolo processo/thread, compilati `-g3 -O0`. Il corpus e il runner sono implementati; la loro presenza non attesta un confronto già eseguito su Linux. Nessun componente è una dipendenza di Ressembly; nessun download automatico, servizio o Daybreak.
+The corpus used project-owned, single-process, single-thread C fixtures with debug symbols and optimizations disabled. The runner and fixtures are part of the development lab. Ressembly has no runtime dependency on the compared tools, Daybreak, an external service, or an automatic download.
 
-| Caso | Controllo good | Caso bad | Aspettativa dal sorgente |
+| Case | Control | Test variant | Interpretation |
 |---|---|---|---|
-| buffer | Scrive gli otto byte logici | Scrive dodici byte dentro storage C da sedici | Sentinel logico all'offset 8 cambia solo in bad; **non** è un overflow oltre l'oggetto C e non si pretende che un tool lo diagnostichi |
-| uaf | Legge durante la vita e poi libera | Libera e tenta una lettura volatile tramite indirizzo conservato | Uso dopo free intenzionale; valore, crash e riuso non sono specificati. I checkpoint distinguono vita e tentativo, non certificano sfruttabilità |
-| pointer | Mantiene puntatore a benign_a | Sostituisce con benign_b | Selezione 1 contro 2; entrambe funzioni innocue nostre, nessun indirizzo controllato esterno |
+| Buffer | Writes only within the logical buffer | Changes the logical sentinel within the same C object | A change in the sentinel is observable. It is not evidence of a write beyond the C object. |
+| Object lifetime | Reads a live object before freeing it | Attempts a read after the object has been freed | This variant intentionally exercises undefined behavior in the owned fixture. A returned value, crash, or reuse is not guaranteed. A checkpoint distinguishes whether the object was live. |
+| Pointer | Keeps a pointer to one owned benign function | Selects a second owned benign function | The two functions yield different known results. The fixture accepts no external address. |
 
-`rs_checkpoint(label)` espone posizione e regione selezionata. Il runner raccoglie byte della lunghezza dichiarata, backtrace e registri. Non interpreta byte di memoria liberata come oggetto ancora vivo. Il caso UAF bad contiene comportamento indefinito intenzionale e non è un test di correttezza C: nessun valore stale preciso viene imposto come risultato.
+The fixture's checkpoints identify selected memory and the stage of execution. The runner captures bounded bytes, backtraces, and registers. Bytes left at a freed address are not treated as live object contents. Tests do not require a specific stale value or draw conclusions about exploitability.
 
-## Esecuzione Linux x86-64
+## Linux x86-64 test environment
 
-Usare un ambiente glibc autorizzato con GDB/Python, compilatore C e Python 3. Ogni directory deve essere nuova. Eseguire da root del progetto:
+The comparison used an authorized glibc lab with Python-enabled GDB, a C compiler, and Python 3. GEF and Pwndbg were prepared separately from the runner. The lab recorded their full revisions and required clean checkouts. Each session used a fresh output directory and a GDB invocation isolated from the user's initialization files.
 
-```sh
-python3 scripts/r0/run.py --tool gdb --profile manual --out work/r0-gdb-001
-python3 scripts/r0/run.py --tool gef --profile manual --entry /percorso/checkout-gef/gef.py --revision HASH_COMPLETO --out work/r0-gef-001
-python3 scripts/r0/run.py --tool pwndbg --profile manual --entry /percorso/checkout-pwndbg/gdbinit.py --revision HASH_COMPLETO --out work/r0-pwndbg-001
-```
+The shared manual profile recorded selected checkpoints and watchpoint stops across tools. The helper profile tested each tool's own diagnostic helper separately. Recorded program counters and backtraces describe where execution stopped. Attribution of a write requires checking the semantics of the observed stop.
 
-Gli ultimi due percorsi sono esempi da adattare ai checkout realmente preparati; i tool non vengono installati dal runner. HEAD deve coincidere con la revisione fornita e il checkout dev'essere pulito. Il profilo `manual` è comune ai tre strumenti: watchpoint di scrittura sul sentinel logico `rs_address+8`, watchpoint sullo slot puntatore, read-watchpoint sul byte `rs_address+16` del caso heap. Nel controllo heap è armato mentre l'oggetto è vivo; in UAF bad dopo il checkpoint di free e prima della lettura. Ogni trigger conserva PC al punto di arresto e backtrace: il PC non viene spacciato per istruzione responsabile senza verifica della semantica del watchpoint.
+The dossier records source and binary SHA-256 hashes, loader hashes, tool revisions, compiler and GDB versions, host and libc, six logs, and a JSON manifest. Elapsed batch time includes debugger startup and does not measure analyst time or collector overhead in isolation. The line count of the generated script does not measure manual effort. Report the emulation backend separately from hardware measurements.
 
-Eseguire separatamente `--profile helper` per GEF e Pwndbg con nuove directory: GEF attiva `heap-analysis-helper`; Pwndbg attiva `track-heap enable`, dopo l'arresto in main. Il profilo helper non aggiunge i watchpoint manuali del confronto comune. Questi comandi e la compatibilità della revisione scelta vanno verificati nel log, non presunti. Ogni sessione usa `gdb -nx`, separando le configurazioni personali e i due concorrenti.
+The runner records observations. A `setup-error` status means a loader or command was not observed or that the log contains an error, even when GDB exits successfully. `commands-observed` reports command execution and does not certify a detection. If `inferior_exit_observed` is false, the run did not observe a clean target exit. An earlier stop may explain that result. The manifest also records debugger exit status, timeouts, signals, and early stops. The per-session timeout is 90 seconds.
 
-Output: sorgente/binario identificati tramite SHA-256, revisioni/hash loader, compilatore/GDB/host/libc dichiarata, script esatti, sei log e manifest JSON. `wall_seconds` misura il batch compreso avvio debugger: **non** misura il tempo di un analista, non basta per confrontare ergonomia o overhead della sola acquisizione. Il conteggio delle righe dello script non equivale a passaggi manuali. In emulazione dichiarare il backend e non inferire prestazioni hardware.
+## R0 review criteria
 
-Il runner salva osservazioni grezze, non PASS diagnostici. `setup_status=setup-error` segnala loader/command non osservato o errori Python/GDB nel log, anche quando GDB ritorna 0; non confrontare queste righe come sessioni diagnostiche valide. `commands-observed` non certifica che l'estensione abbia rilevato un difetto: va revisionato il log. Un tool può arrestarsi su un'anomalia prima dell'ultimo checkpoint: `inferior_exit_observed=false` significa che la sessione non ha osservato exit0, non che il tool è guasto. Il manifest riporta anche exit del debugger e timeout; leggere sempre i log per errori dei comandi, segnali e arresti anticipati. Timeout per sessione: 90 secondi.
+The review compares available information, stop locations, allocation and free events, address reuse and object identity, sampled bytes, missing writes, false signals, and analyst effort for all six cases. It records tool versions and any additional manual steps. Measuring an analyst benefit would require separate trials with the task order alternated. The corpus alone establishes neither novelty nor superiority.
 
-## Revisione e gate R0
+## Interpreting stops
 
-Confrontare per ciascuno dei sei casi: informazioni già disponibili, punto di arresto, relazione alloc/free, distinzione fra indirizzo e generazione, byte osservati, scritture intermedie non registrate, falsi segnali e azioni manuali necessarie. Annotare versioni e comandi aggiuntivi. Ripetere i compiti con ordine alternato e misurare separatamente il lavoro umano se si vuole affermare un beneficio d'uso. La matrice può concludere che non esiste un vantaggio: nessuna innovazione o superiorità deriva da questo corpus.
+A read watchpoint can stop in both the control and the lifetime test variant. The preceding checkpoint supplies the relevant lifetime context. The sentinel and pointer tests instead compare the observed changes in the relevant variants. The referenced GEF and Pwndbg revisions have different watchpoint implementations and coverage. The comparison does not identify a single cause for a missing signal or establish competing tool defects. GEF documents its helper as experimental.
 
-Fonti primarie dei comandi, consultate il 13 novembre 2026: [GEF heap helper](https://hugsy.github.io/gef/commands/heap-analysis-helper/) e [Pwndbg track-heap](https://pwndbg.re/stable/commands/linux_libc_elf/track-heap/). Le pagine mobili non certificano la revisione installata.
+The lab pinned GEF `809864d00442f9993298e33fd9cd282d687d2f45` and Pwndbg `9760ac8f1346d142857cffc933995cd6fca34dff`. The [GEF documentation](https://hugsy.github.io/gef/commands/heap-analysis-helper/) and [Pwndbg documentation](https://pwndbg.re/stable/commands/linux_libc_elf/track-heap/) were reviewed on November 13, 2026. Current documentation can differ from the pinned revisions.
 
+## Runner compatibility and results
 
-## Lettura dei trigger e controllo sorgenti dei concorrenti
+Pilot sessions identified a GDB script path quoting issue and a control-flow conflict in the tested Pwndbg revision. The main comparison used separate compatible runner configurations. The excluded pilots were retained and were not counted as tool detection results. Watchpoints ended at the fixture boundary so later stack reuse would not be counted as an in-lifetime observation.
 
-Nel profilo manuale il read-watchpoint può scattare sia in UAF good sia bad: è lo stato di vita del checkpoint precedente a distinguere i casi, non la presenza del trigger. Non contare il controllo good come vulnerabilità. I watchpoint su sentinel e slot dovrebbero invece mostrare una modifica solo nel rispettivo caso bad, da verificare live.
-
-Ispezione statica dei checkout fissati nel laboratorio (`GEF 809864d00442f9993298e33fd9cd282d687d2f45`, `Pwndbg 9760ac8f1346d142857cffc933995cd6fca34dff`): gli helper UAF usano watchpoint di cambiamento di valore, non `rwatch`. Una lettura UAF può quindi non produrre un loro segnale; inoltre la regione iniziale osservata da GEF non comprende il nostro offset +16. Il test non separa da solo i due limiti. Sono caratteristiche del perimetro da confrontare con le evidenze, non bug attribuiti agli strumenti. GEF dichiara il proprio helper sperimentale. Nel report distinguere capacità documentate, codice ispezionato e risultati eseguiti.
-
-## Compatibilità del runner verificata nel laboratorio
-
-GDB `source` consuma il nome file non quotato; il runner non riusa il quoting del comando `file`. Le prime prove che fallivano su questa differenza sono conservate come pilot, non conteggiate nel confronto valido. I watchpoint manuali vengono disabilitati al checkpoint finale per evitare che il riuso dello stack dopo il ritorno di funzione sembri una modifica durante la vita dell'oggetto.
-
-La revisione Pwndbg fissata segnala un conflitto noto con `commands`/`continue`. Il profilo Pwndbg usa il workaround da essa indicato: `set gdb-workaround-stop-event disabled-deadlock` e `pi gdb.execute("continue")`. I profili con eccezioni/deadlock sono conservati ma esclusi; non si classificano come difetti delle capacità diagnostiche. Questa differenza del flusso è visibile negli script salvati, non nascosta nei tempi.
-
-Risultati effettivi e limitazioni della matrice: [R0-RESULTS.md](R0-RESULTS.md). Per verificare le cinque directory selezionate usare `scripts/r0/verify-results.py` con i cinque percorsi come argomenti; controlla 30 sessioni, checkpoint, campioni e trigger, senza attestare origine o beneficio d'uso.
+See [R0 results](R0-RESULTS.md) for the actual comparison and its limits. The report verifier checks 30 selected sessions for checkpoints, samples, and triggers. It does not authenticate provenance or measure usability.

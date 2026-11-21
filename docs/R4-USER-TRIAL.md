@@ -1,15 +1,15 @@
-# Prova pratica dell'alfa locale
+# Practical trial of the local alpha
 
-Questo percorso usa il pacchetto pilota già verificato nel laboratorio Debian x86-64. Non modifica il Mac e non pubblica nulla. L'installazione di prova è separata dagli esperimenti di sviluppo. Il collaudo automatico non equivale alla tua esperienza nell'usarla: annota dove le istruzioni risultano poco chiare.
+This historical walkthrough used the pilot package already checked in the Debian x86-64 lab. The trial installation was separate from development experiments. Automated validation and user experience are recorded separately. During the trial, note any unclear instructions.
 
-Con la VM Debian accesa, apri un Terminale del Mac:
+With the Debian VM running, open Terminal on the Mac:
 
 ```sh
 cd /Users/user/Documents/ChatGPT/Ressembly
 sh work/linux-lab/ssh-lab.sh -t '/home/lab/ressembly-user-trial/bin/ressembly gdb /home/lab/ressembly-user-work/debug_lab'
 ```
 
-Al prompt GDB inserisci, uno alla volta:
+At the GDB prompt, enter one command at a time:
 
 ```gdb
 set pagination off
@@ -21,10 +21,10 @@ rs-help
 quit
 ```
 
-Per uscire conferma la chiusura del programma didattico se GDB lo chiede. Cosa verificare: riesci ad avviare il debugger dalla guida, leggere assembly/registri/stack e ritrovare i comandi senza assistenza? Non servono diagnosi di vulnerabilità. Comunica l'esito e gli eventuali passaggi poco chiari.
+When quitting, confirm closure of the fixture if GDB prompts you. Check whether you can start the debugger from the guide, read assembly, registers, and stack, and find the available commands without help. Share the outcome and any unclear steps. The trial concerns usability.
 
-Il pilota non è ancora l'archivio conclusivo R4/R5. Le prove tecniche finali verranno ripetute sul pacchetto definitivo; questa è la prova umana del percorso d'uso. Se viene rinviata, il rapporto la indicherà come non eseguita, senza sostituirla con un agente.
+The pilot predates the final R4/R5 archive. Technical checks on the final package are separate from the human walkthrough. If a user trial is postponed, the report records that it was not run.
 
-## Esito registrato
+## Recorded outcome
 
-L'utente ha riferito «tutto ok ottimo» dopo la prova di contesto, mappe e aiuto. Il primo incollaggio di più righe ha causato difficoltà; risolto inserendo **un comando per volta**. Registrazione: `work/r4-r5-gates/user-trial.json`. Questa è una conferma dell'utilizzatore, non una misura indipendente di velocità o correttezza di ogni modulo. Dopo la rimozione autorizzata delle VM, il comando SSH sopra resta documentazione storica: occorre ricreare un laboratorio per ripeterlo.
+The user reported “everything worked, great” after testing context, maps, and help. Pasting several lines at once caused initial difficulty. Entering **one command at a time** resolved it. The result is recorded in `work/r4-r5-gates/user-trial.json`. This is user confirmation of the tested path. It provides no independent performance measurement or validation of every module. After the authorized VM removal, the SSH command became a historical reference. Rebuild the lab to repeat the trial.

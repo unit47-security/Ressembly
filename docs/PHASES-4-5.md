@@ -1,37 +1,37 @@
-# R4 e R5 — rapporto locale e confini della convalida
+# R4 and R5 local report and validation scope
 
-13 novembre 2026. R4 consegna l'alfa locale installabile; R5 comprende la cronologia estesa concordata, Ghidra offline e plugin locali. Non è una pubblicazione né una suite completa per ogni piattaforma. La licenza scelta dall'utente è **GPL-3.0-or-later**, con testo in LICENSE e applicazione/esclusioni in NOTICE. Nessuna dipendenza da Daybreak, GEF, Pwndbg o IA obbligatoria.
+November 13, 2026. R4 delivered an installable local alpha. R5 added the agreed history extension, offline Ghidra integration, and local plugins. This report covers the tested platforms before publication. The user selected **GPL-3.0-or-later**. LICENSE contains the terms and NOTICE describes their scope and exclusions. The project has no mandatory dependency on Daybreak, GEF, Pwndbg, or AI.
 
-## Evidenze osservate
+## Observed evidence
 
-| Area | Prove effettive e dossier conservati |
+| Area | Tests performed and evidence retained |
 |---|---|
-| Contratti offline | 93 test Python e 14 JavaScript, `work/r4-r5-gates/python.txt` e `javascript.txt` |
-| Pacchetto pilota003 | 16 controlli Debian (`work/r4-package-debian-001`) e 16 Kali (`work/kali-lab/package-pilot003`), installazione senza checkout del prodotto |
-| Moduli installati Kali pilota | 10 controlli `work/kali-lab/installed-pilot003`: contesto/memoria/plugin/dossier/statico; rifiuto dei profili glibc incompatibili |
-| Cronologia R5 | 14 controlli reali in `work/r5-history-003`, altri 14 nel replay indipendente `work/r5-history-independent-001`; oracolo GDB separato, mutazione intercettata |
-| Ghidra | 27 controlli `work/r5-ghidra-validation-002`, due ELF PIE/non-PIE e otto negativi diretti; diagnostiche specifiche verificate separatamente |
-| Plugin | Nove test di contratto e 17 controlli/due sessioni GDB in `work/kali-lab/plugins-validation/002`; mutazione dell'hash fidato intercettata |
-| Prova umana | Esito positivo riferito dall'utente, `work/r4-r5-gates/user-trial.json`; difficoltà iniziale di incollaggio risolta con un comando per riga |
+| Offline contracts | 93 Python and 14 JavaScript tests in `work/r4-r5-gates/python.txt` and `javascript.txt` |
+| Pilot package 003 | 16 checks on Debian (`work/r4-package-debian-001`) and 16 on Kali (`work/kali-lab/package-pilot003`). Installation did not require a source checkout |
+| Modules installed from the Kali pilot | 10 checks in `work/kali-lab/installed-pilot003` covering context, memory, plugins, dossiers, and static properties. Incompatible glibc profiles were rejected |
+| R5 history | 14 live checks in `work/r5-history-003` and 14 independent repeats in `work/r5-history-independent-001`. Tests used a separate GDB oracle and detected an intentional mutation |
+| Ghidra | 27 checks in `work/r5-ghidra-validation-002`, covering two PIE/non-PIE ELF fixtures and eight direct negative tests. Specific error messages were checked separately |
+| Plugins | Nine contract tests and 17 checks across two GDB sessions in `work/kali-lab/plugins-validation/002`. The tests caught a mutation of the trusted hash |
+| User trial | The user reported success in `work/r4-r5-gates/user-trial.json`. Entering one command per line resolved an initial paste issue |
 
-Il pacchetto conclusivo si distingue dai piloti: due build byte-identiche e hash esterni in `work/r4-r5-final-build.json`; installazione finale Debian in `work/r4-package-debian-final`, Kali in `work/kali-lab/package-final` e matrice installata in `work/kali-lab/installed-final`. **L'esito conclusivo va letto nei relativi validation.json: questa tabella non attribuisce ai piloti la validazione di byte successivi.** I digest finali restano esterni al ZIP per evitare un riferimento circolare fra archivio e documento contenuto. Non includiamo dossier, VM o chiavi nel pacchetto.
+The final package was tested separately from the pilots. Two builds produced identical bytes, with external hashes recorded in `work/r4-r5-final-build.json`. The Debian installation is recorded in `work/r4-package-debian-final`, the Kali installation in `work/kali-lab/package-final`, and the installed compatibility matrix in `work/kali-lab/installed-final`. The corresponding `validation.json` files record the final outcome. Pilot results cover their own package bytes. Final digests stay outside the ZIP so the archive does not contain a reference to its own hash. The package excludes dossiers, VMs, and keys.
 
-## Matrice e limiti
+## Compatibility and limits
 
-Debian 12 x86-64, GDB 13.1/Python 3.11/glibc 2.36: moduli generali, heap e cronologia selettiva. Kali 2026.3 x86-64, GDB 17.2/Python 3.14.7/glibc 2.43: moduli generali; **heap e collector allocator R2/R5 non supportano glibc 2.43 e la rifiutano esplicitamente**. Kernel/processi Linux reali in QEMU TCG sul Mac ARM64; nessuna misura di prestazioni native. Ghidra 12.1.4 con JDK21 gira sul Mac usando ELF/riferimenti acquisiti in Linux, non dimostra debugging Linux sul Mac.
+Debian 12 x86-64 with GDB 13.1, Python 3.11, and glibc 2.36 covered the general modules, the heap view, and selected history. Kali 2026.3 x86-64 with GDB 17.2, Python 3.14.7, and glibc 2.43 covered the general modules. **The R2/R5 heap and allocator collectors explicitly reject glibc 2.43.** The tests ran real Linux kernels and processes in QEMU TCG on the ARM64 Mac. Performance on native hardware was unmeasured. Ghidra 12.1.4 with JDK 21 ran on the Mac using ELF files and references collected on Linux. Linux debugging on the Mac was outside that check.
 
-La cronologia R5 è opt-in, singolo processo/thread, fino a quattro regioni hardware selezionate. calloc e realloc sono operazioni allocator; non ricostruiscono tutte le scritture. Realloc riuscita crea una nuova identità anche allo stesso indirizzo; regioni sospese/terminate richiedono nuova selezione. Ritorni mancanti e budget esauriti producono stati incompleti espliciti. Chiamate rientranti/nidificate durante una transazione non sono coperte. [Semantica completa](R5-HISTORY.md).
+R5 history is opt-in and covers one process, one thread, and up to four selected hardware regions. Calloc and realloc are allocator operations. A successful realloc creates a new identity even at the same address. Suspended or closed regions require a new selection. Missing returns and exhausted budgets produce explicit incomplete states. Reentrant or nested calls within a transaction are outside coverage. [History semantics](R5-HISTORY.md).
 
-I plugin generano annotazioni separate: processo separato **non significa sandbox**; codice fidato eseguito con i permessi dell'utente. Il bridge Ghidra verifica identità e coerenza, non autenticità. Nessun segnale isolato dimostra sfruttabilità.
+Plugins produce separate annotations. Trusted plugin code runs in a separate process with the user's permissions and without a sandbox. The Ghidra bridge checks identity and consistency. Authenticity and exploitability require separate evidence.
 
-## Confronto aggiornato: documentazione, non nuovo benchmark
+## Documentation comparison
 
-Le fonti primarie consultate il 13 novembre confermano funzionalità già esistenti: [GEF context](https://hugsy.github.io/gef/commands/context/) presenta registri, codice, stack e contesto; [GEF heap-analysis-helper](https://hugsy.github.io/gef/commands/heap-analysis-helper/) documenta analisi di operazioni heap. [Pwndbg features](https://pwndbg.re/dev/features/) e [indice comandi stabile](https://pwndbg.re/stable/commands/) includono contesto, heap e `track-heap`. Queste capacità impediscono di presentare generici contesto o tracking allocator come invenzioni Ressembly. Il confronto sperimentale R0 conserva versioni fissate e problemi circoscritti nel [rapporto R0](R0-RESULTS.md); consultare documentazione corrente non equivale a rieseguire quei benchmark sulle ultime versioni.
+The primary sources consulted on November 13 documented existing capabilities. [GEF context](https://hugsy.github.io/gef/commands/context/) presents registers, code, stack, and context. The [GEF heap helper](https://hugsy.github.io/gef/commands/heap-analysis-helper/) documents heap operation analysis. [Pwndbg features](https://pwndbg.re/dev/features/) and the [stable command index](https://pwndbg.re/stable/commands/) include context, heap inspection, and heap tracking. These capabilities predate the Ressembly modules described here. The [R0 report](R0-RESULTS.md) records the pinned versions and specific experimental findings. No benchmark was rerun on the versions described by the documentation.
 
-Rimane un'ipotesi di prodotto, non una superiorità dimostrata, che identità di oggetto, copertura selettiva esplicita e dossier persistenti semplifichino alcuni laboratori. La prova umana positiva riguarda il percorso indicato, non produttività comparativa.
+Object identity, explicit selective coverage, and persistent dossiers may make some lab workflows easier. That remains a product hypothesis. The positive user trial covers the stated walkthrough.
 
-## Conservazione e seguito
+## Retention and next milestone
 
-L'utente ha autorizzato, dopo i collaudi finali, la rimozione di entrambe le VM, immagini/base download, runtime QEMU locale e chiavi dedicate. Log, manifest e dossier sull'host rimangono; il coordinatore registra l'effettiva rimozione e spazio recuperato in `work/cleanup-report.json`. I vecchi script SSH/avvio diventano riferimenti storici non utilizzabili senza ricostruire il laboratorio. La cartella originale del progetto rimane preservata.
+The user authorized removal of both VMs, base images and downloads, the local QEMU runtime, and dedicated keys after final testing. Host logs, manifests, and evidence dossiers are retained. The coordinator records the actual removal and recovered space in `work/cleanup-report.json`. The old SSH and startup scripts require a rebuilt lab to run again. The original project directory was retained.
 
-Prossimo gate proposto: supporto allocator glibc 2.43 con corpus/oracoli dedicati, oppure prova su hardware x86-64 fisico. Attach/fork, multithread, altri allocator, GUI e backend alternativi restano non implementati. Nessun repository remoto, push, release o servizio a pagamento introdotto.
+The proposed next milestone was dedicated glibc 2.43 allocator validation or testing on physical x86-64 hardware. Attach, fork, multithreading, other allocators, a GUI, and alternative backends were still open. This milestone did not create a remote repository, publication, push, release, or paid service.

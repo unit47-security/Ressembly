@@ -1,78 +1,78 @@
-> Documento storico v0.1: la direzione corrente approvata il 24 ottobre 2026 è in [SUITE-UNIT47.md](SUITE-UNIT47.md). Il piano Windows/C++/Qt qui descritto è superato.
+> Historical v0.1 document. [SUITE-UNIT47.md](SUITE-UNIT47.md) records the direction approved on October 24, 2026. That decision superseded the Windows/C++/Qt plan below.
 
-# Ressembly — specifica iniziale v0.1
+# Ressembly initial specification v0.1
 
-Data: 24 ottobre 2026. Direzione tecnica proposta e prototipo M0; nessuna promessa di supporto già operativo ai debugger.
+October 24, 2026. This document records the proposed technical direction and the M0 prototype. Debugger integration was still planned.
 
-## Decisione di prodotto
+## Product decision
 
-Un’app desktop Windows in C++ con Qt per il ricercatore che vuole comprendere una funzione del software osservandola in esperimenti controllati. L'interfaccia richiama la leggibilità di OllyDbg; il lavoro è organizzato intorno a domande, osservazioni e ipotesi, non soltanto intorno agli indirizzi.
+A Windows desktop application in C++ with Qt for researchers who study software behavior in controlled experiments. The interface takes inspiration from OllyDbg's readability and organizes the work around questions, observations, and hypotheses.
 
-Domanda iniziale: «Quale codice partecipa alla decodifica di questo formato?»
+Initial question: “Which code participates in decoding this format?”
 
-Percorso: registrazione dell'esperimento A → azione B con una variazione dichiarata → acquisizioni confrontabili → funzioni osservate solo in B → ispezione nel debugger e in Ghidra → terzo esperimento per cercare un controesempio → nota con riferimenti agli eventi.
+Workflow: record experiment A → perform action B with one declared variation → collect comparable observations → find functions observed only in B → inspect the result in the debugger and Ghidra → run a third experiment to look for a counterexample → write a note linked to the events.
 
-Il confronto produce candidati da esaminare. L'analista resta responsabile dell'interpretazione. Un evento aggiuntivo, una frequenza differente o una coincidenza non dimostrano la funzione semantica né la causalità.
+The comparison produces candidates for investigation. The analyst interprets the evidence. Additional events, frequency differences, and coincidences are insufficient to establish a function's meaning or role.
 
-## Utilizzatore e primo laboratorio
+## Users and first lab
 
-Ricercatori e sviluppatori che lavorano su programmi nativi propri, open source o autorizzati. Primo laboratorio operativo previsto: Windows x64, modalità utente, processo singolo e stesso binario. La lettura offline delle osservazioni resta utilizzabile anche dal Mac.
+Researchers and developers work with native programs they own, open-source programs, or other authorized targets. The first planned operational lab is Windows x64 in user mode, with one process and the same binary across runs. The offline observation reader can also be used from a Mac.
 
-Programmi piccoli con comportamenti normali: lettura di un'intestazione, decodifica di un'immagine e selezione di un algoritmo. FaultCore mantiene la gestione dei crash e della riduzione degli input; Ressembly non la reimplementa.
+Use small programs with normal behavior, such as reading a header, decoding an image, or selecting an algorithm. FaultCore remains responsible for crash handling and input reduction.
 
-## Funzioni MVP previste
+## Planned MVP features
 
-1. Creare un esperimento: domanda, input, azione, ambiente e finestra di osservazione.
-2. Raccogliere osservazioni tramite un adattatore x64dbg: iniziamente snapshot a breakpoint e punti di ingresso selezionati.
-3. Conservare binario/build, hash dei moduli, RVA, thread, evento e provenienza. Non correlare indirizzi assoluti fra esecuzioni.
-4. Confrontare una build e un ambito di acquisizione identici. Esplicitare copertura, perdite e porzioni non osservate.
-5. Rinominare e annotare le funzioni nel notebook senza sovrascrivere l'evidenza originale.
-6. Collegare osservazioni e posizioni statiche di Ghidra con controllo di hash e base immagine.
-7. Esportare un dossier leggibile con riferimenti verificabili, ipotesi, controesempi e limiti.
+1. Create an experiment with a question, input, action, environment, and observation window.
+2. Collect observations through an x64dbg adapter, starting with breakpoint snapshots and selected entry points.
+3. Keep the binary and build identity, module hashes, RVAs, thread, event, and provenance. Use stable identities to compare runs.
+4. Compare observations with identical builds and capture scopes. Show coverage, losses, and unobserved portions.
+5. Rename and annotate functions in the notebook while retaining the original evidence.
+6. Link observations to static Ghidra locations after checking the hash and image base.
+7. Export a readable dossier with verifiable references, hypotheses, counterexamples, and limits.
 
-## Cosa implementa M0
+## What M0 implements
 
-Il prototipo confronta inventari di ingressi funzione. Non ricostruisce istruzioni, stack delle chiamate, durate o relazioni causali. Il tipo `function_entry` è un contratto interno proposto, non una dichiarazione di compatibilità con un formato nativo esistente.
+The prototype compares function-entry inventories. It leaves instruction sequences, call stacks, durations, and causal relationships unresolved. The `function_entry` type defines a proposed internal contract. Native format compatibility requires separate work.
 
-L'identità di una posizione è SHA-256 del modulo + RVA normalizzato. Il nome della funzione è solo una descrizione. L'hash del binario di riferimento deve coincidere nelle due osservazioni e nell'intestazione del bundle. Un modulo differente resta un'identità distinta: non viene eseguito matching tra versioni.
+A location is identified by the module SHA-256 and normalized RVA. The function name is descriptive. The reference binary hash must match both observations and the bundle header. A different module has a distinct identity. The comparison is limited to one build.
 
-`complete` è una dichiarazione del produttore. L'interfaccia la chiama completezza dichiarata, non osservazione universale. Il confronto non attesta che un esportatore sia attendibile. Una traccia parziale conserva la qualità parziale e non permette inferenze di non-esecuzione.
+`complete` is a statement supplied by the producer. The interface displays it as declared completeness. The comparison does not establish exporter trustworthiness. A partial trace stays partial and leaves unobserved execution unknown.
 
-I numeri di sequenza sono ordine di acquisizione, non un ordine causale globale tra thread. I conteggi sono eventi, non tempo CPU o istruzioni. La normalizzazione non rimuove valori arbitrari per far coincidere le osservazioni.
+Sequence numbers describe collection order within the applicable capture. They do not establish causality across threads. Counts refer to events. Normalization preserves the meaning of recorded data.
 
-## Architettura scelta
+## Selected architecture
 
 ```text
-Adattatore x64dbg (C++, da implementare)
-   ↓ eventi copiati, coda limitata, nessuna elaborazione pesante nei callback
-Formato di osservazione versionato + identità del target
+x64dbg adapter (C++, planned)
+   ↓ copied events, bounded queue, lightweight callbacks
+Versioned observation format plus target identity
    ↓
-Motore offline: validazione → normalizzazione → confronto → riferimenti
+Offline engine: validation → normalization → comparison → references
    ↓
-App desktop C++/Qt: esperimenti | assembly | registri | memoria | evidenze | notebook
-   ↔ adattatore Ghidra (da implementare, matching esatto)
+C++/Qt desktop app: experiments | assembly | registers | memory | evidence | notebook
+   ↔ Ghidra adapter (planned, exact matching)
 ```
 
-M0 usa JavaScript senza dipendenze e HTML locale soltanto per l’anteprima. Il prodotto previsto è un’applicazione desktop Windows x64 in C++/Qt, distribuita come eseguibile e senza server web. Il core C++ dovrà essere implementato e verificato sul medesimo corpus. Un futuro lettore offline macOS non implica debugging Windows dal Mac.
+M0 uses dependency-free JavaScript and local HTML for the preview. The proposed product was a Windows x64 C++/Qt executable without a web server. The C++ core would have to pass tests on the same corpus. A macOS offline reader could work independently of the Windows debugger.
 
-Per il primo collegamento operativo si usa il debugger esistente attraverso un plugin, senza riscrivere il motore Windows. L'integrazione è opzionale e separata. REA/ReAgent restano strumenti complementari; non sono dipendenze di M0 e non costituiscono un'integrazione già disponibile.
+The first live integration would use the existing debugger through a separate, optional plugin. REA and ReAgent remain complementary tools. M0 has no dependency on them or implemented REA integration.
 
-## Prestazioni e dati
+## Performance and data
 
-M0: massimo 20 osservazioni, 50000 eventi per bundle e 256 moduli per osservazione; importazione UI fino a 5 MB. Questi limiti definiscono un prototipo, non un benchmark di produzione. Dati grandi richiederanno streaming, paginazione e worker senza bloccare l'interfaccia.
+M0 allows up to 20 observations, 50,000 events per bundle, 256 modules per observation, and 5 MB for UI imports. These are prototype limits. Larger inputs would require streaming, pagination, and background workers to keep the UI responsive.
 
-L'adattatore futuro dovrà dichiarare eventi persi, buffer esauriti, cancellazione e disconnessione. Un'acquisizione interrotta non diventa completa. I callback non devono conservare puntatori del debugger dopo la loro validità.
+The future adapter must report dropped events, full buffers, cancellation, and disconnection. An interrupted capture remains partial. Callbacks must drop references to debugger pointers after their validity ends.
 
-Il visualizzatore non interpreta i dati importati come HTML o comandi. L'importazione non avvia processi. L'esportazione contiene input dichiarati e note: sono dati di ricerca da gestire secondo l'ambiente dell'utente. Nessun servizio cloud necessario.
+The viewer treats imported content as data and starts no processes during import. Exports contain declared inputs and analyst notes. Handle those research records according to the user's environment. The prototype requires no cloud service.
 
-## Esclusioni fino al superamento dell'MVP
+## Outside the MVP
 
-Kernel, driver, multiprocesso, replay deterministico, backtracking universale, ricostruzione automatica dei tipi, taint tracking completo, ricostruzione semantica tra versioni, rilevamento automatico di vulnerabilità, patch del programma e agente IA autonomo.
+Kernel and driver support, multiple processes, deterministic replay, universal backtracking, automatic type recovery, full taint tracking, semantic recovery across builds, automatic vulnerability detection, program patching, and autonomous AI agents.
 
-Non includere una funzione solo perché appariscente: deve ridurre il lavoro di un esperimento reale, preservando le evidenze.
+A proposed feature belongs in the MVP only if it reduces real experiment work while preserving the evidence.
 
-## Criterio di validazione del prodotto
+## Product validation
 
-Confrontare il notebook con il normale uso di x64dbg/Ghidra su tre piccoli bersagli e coinvolgere almeno cinque utilizzatori. Misurare tempo alla prima ipotesi corretta, tempo alla verifica, errori di interpretazione e capacità di riprendere il lavoro dopo un giorno.
+Compare the notebook with normal use of x64dbg and Ghidra on three small fixtures and with at least five users. Measure time to the first correct hypothesis, time to verification, interpretation errors, and the ability to resume after one day.
 
-Un vantaggio proposto è ridurre almeno del 25% il tempo mediano su due dei tre compiti senza aumentare le conclusioni errate. È un gate progettuale da misurare, non un risultato osservato. Se non emerge un vantaggio, restringere il prodotto a plugin/notebook oppure interrompere l'idea di debugger autonomo.
+The proposed gate is a reduction of at least 25% in median time for two of three tasks without an increase in incorrect conclusions. This was a target for the trial. If the trial finds no benefit, narrow the product to a plugin or notebook, or abandon the standalone debugger proposal.

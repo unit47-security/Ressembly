@@ -1,47 +1,28 @@
-# R3e — esperimenti persistenti
+# R3e — Persistent experiments
 
-Implementato e collaudato con snapshot reali GDB; risultati e ripetizioni indipendenti sono nel [rapporto finale](PHASES-1-3.md).
+Implemented and tested with real GDB snapshots. Results and independent repetitions are in the [final report](PHASES-1-3.md).
 
-Il dossier `ressembly.experiment.v1` è un JSON autonomo: identità e SHA-256 del
-binario, input binari in base64, snapshot selezionati, annotazioni riferite agli
-snapshot e limiti espliciti. Si può riaprire senza GDB e senza il processo originale.
-Non ripristina un processo, non riproduce automaticamente una sessione e non esegue
-gli input o eventuali stringhe presenti nei dati.
+The `ressembly.experiment.v1` dossier is a self-contained JSON file with the binary identity and SHA-256, base64-encoded binary input, selected snapshots, notes associated with snapshots, and explicit limits. It can be reopened without GDB or the original process. Opening or importing a dossier does not restore a process, replay a session, or execute input or strings in the data.
 
-## Percorso locale
+## Local workflow
 
 ```sh
-python3 scripts/ressembly-experiment.py create work/experiment.json work/owned-binary "Esperimento nostro"
-python3 scripts/ressembly-experiment.py input work/experiment.json work/input.bin "Input previsto"
+python3 scripts/ressembly-experiment.py create work/experiment.json work/owned-binary "Project experiment"
+python3 scripts/ressembly-experiment.py input work/experiment.json work/input.bin "Expected input"
 python3 scripts/ressembly-experiment.py show work/experiment.json
-python3 scripts/ressembly-experiment.py note work/experiment.json "Osservazione" --snapshot ID
+python3 scripts/ressembly-experiment.py note work/experiment.json "Observation" --snapshot ID
 python3 scripts/ressembly-experiment.py compare work/experiment.json ID1 work/experiment.json ID2
 python3 scripts/ressembly-experiment.py export work/experiment.json work/export.json
 ```
 
-Lo snapshot reale è acquisito dal comando GDB `rs-experiment-snapshot FILE LABEL [ADDRESS LENGTH]`,
-dopo `source /percorso/Ressembly/src/ressembly_experiment.py`.
-L'importazione offline usa `import-snapshot FILE SNAPSHOT_JSON BUILD_SHA256 RUN_ID LABEL`:
-questa provenienza è `supplied_json`, non una prova di acquisizione tramite GDB.
-Gli schemi noti debug-context, object-history R2 e marker-history R1 devono avere hash build e run interni coerenti con il record; il dossier rifiuta le contraddizioni senza modificarsi. Il file conserva questa distinzione. Anche `gdb_context` è una provenienza dichiarata,
-non una firma crittografica: gli hash rilevano incoerenze, non attestano autenticità.
+Acquire a debugger snapshot with `rs-experiment-snapshot FILE LABEL [ADDRESS LENGTH]` after loading `source /path/to/Ressembly/src/ressembly_experiment.py` in GDB. Offline acquisition uses `import-snapshot FILE SNAPSHOT_JSON BUILD_SHA256 RUN_ID LABEL` and records `supplied_json` provenance. For the known debug-context, R2 object-history, and R1 marker-history schemas, the build hash and run ID inside the snapshot must match its dossier record. The dossier rejects contradictions and leaves the file intact. The `gdb_context` label also declares provenance. Hashes catch inconsistencies and do not provide a cryptographic signature.
 
-## Confronti e limiti
+## Comparison and limits
 
-Build diverse sono rifiutate, anche per il confronto. Run dello stesso dominio diversi sono permessi ma
-segnalati: i valori grezzi e gli indirizzi non costituiscono identità di oggetti.
-Gli ID di processo (boot/PID/start) e gli UUID delle catture hanno domini diversi: il confronto li dichiara non confrontabili (`same_run: null`). La differenza fra due snapshot non ricostruisce le scritture intermedie. Ogni
-sezione parziale resta tale; il dossier non trasforma dati mancanti in osservazioni.
-Un input registrato non è automaticamente un input consumato dal programma.
+Different builds are rejected, including during comparison. Different runs with the same identity scheme are allowed and flagged. Raw values and addresses do not establish object identity. Process IDs based on boot, PID, and start time and capture UUIDs use different identity schemes. A comparison across them reports `same_run: null`. Differences between snapshots leave intervening writes unknown. Partial sections remain partial, and recorded input does not establish which input the program consumed.
 
-Budget: binario di riferimento 256 MiB, dossier 8 MiB, singolo input 256 KiB, snapshot 1 MiB, fino a 128 record per
-collezione, nota 16.384 caratteri. Nessun overwrite implicito in creazione/export.
-Aggiornamenti scritti su un file temporaneo con fsync e sostituzione atomica;
-un lock esclusivo evita scrittori simultanei che usano questo percorso. Dopo un
-arresto forzato il lock può restare: verificare che non ci siano scrittori attivi
-prima di rimuoverlo manualmente. Non è promesso recupero dopo ogni guasto di disco.
-Il dossier è locale e può contenere input e memoria sensibili; l'export è una copia
-integrale, senza invio a servizi esterni.
+Limits are 256 MiB for the reference binary, 8 MiB for the dossier, 256 KiB per input, 1 MiB per snapshot, up to 128 records per collection, and 16,384 characters per note. Create and export reject an existing destination. Updates use a temporary file with fsync and atomic replacement. An exclusive lock prevents concurrent writers using this workflow. A forced stop may leave the lock in place. Check that no writer is active before removing it manually. Recovery from every disk failure is outside the guarantees.
 
-Fonti API GDB: [comandi Python](https://sourceware.org/gdb/current/onlinedocs/gdb.html/CLI-Commands-In-Python.html),
-[inferior e lettura memoria](https://sourceware.org/gdb/current/onlinedocs/gdb.html/Inferiors-In-Python.html).
+The dossier is local and may contain sensitive input and memory. Export creates a full copy, with no transfer to external services.
+
+GDB API sources: [Python commands](https://sourceware.org/gdb/current/onlinedocs/gdb.html/CLI-Commands-In-Python.html) and [inferiors and memory reads](https://sourceware.org/gdb/current/onlinedocs/gdb.html/Inferiors-In-Python.html).

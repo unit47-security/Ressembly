@@ -1,106 +1,102 @@
-# Ressembly — verifiche correnti e storiche
+# Ressembly current and historical validation
 
-## Chiusura corrente fino a R3 inclusa — 13 novembre 2026
+## Completion through R3 on November 13, 2026
 
-R3a–R3e completate e convalidate nel laboratorio Debian 12 x86-64/QEMU TCG sul Mac ARM64, GDB 13.1, glibc 2.36. R4 non avviata. La precedente etichetta informale “fasi 1–3” copriva solo R1/R0/R2: la chiusura corrente corregge il perimetro.
+R3a–R3e were completed and validated in the Debian 12 x86-64 lab under QEMU TCG on the ARM64 Mac, with GDB 13.1 and glibc 2.36. R4 had yet to begin at this point. The previous informal “phases 1–3” label covered R1/R0/R2 only. This report corrects the stated scope.
 
-| Modulo | Prove finali e indipendenti |
+| Module | Final and independent tests |
 |---|---|
-| R3a/b | Tre sessioni + tre indipendenti; 117 + 117 asserzioni su target con/senza simboli per esecuzione |
-| R3c | 13 + 13 sessioni; quattro prove supplementari |
-| R3d | 44 + 44 controlli; altri 18 indipendenti |
-| R3e | 14 + 14 controlli; riapertura da revisore separato |
-| Integrazione | Due percorsi × 20 controlli GDB, ripetuti indipendentemente, più controlli di storia/export |
-| Regressioni | R1 16/16 e R2 22/22 dopo l'integrazione |
-| Test locali | 67 Python, 14 JavaScript; nessun fallimento |
+| R3a/b | Three original and three independent sessions, with 117 assertions each on the symbolized and stripped targets per run |
+| R3c | 13 original and 13 independent sessions, plus four additional tests |
+| R3d | 44 original and 44 independent checks, plus 18 independent follow-up checks |
+| R3e | 14 original and 14 independent checks, plus reopening by a separate reviewer |
+| Integration | Two workflows with 20 GDB checks each, repeated independently, plus history and export checks |
+| Regression | R1 passed 16/16 and R2 passed 22/22 after integration |
+| Local tests | 67 Python and 14 JavaScript tests passed |
 
-Dossier finali e limiti in [PHASES-1-3.md](PHASES-1-3.md); fonte aggregata `work/r3-gates/acceptance.json`. Guide in [R3.md](R3.md). Corrette le contraddizioni build/run accettate nei dossier e il confronto fra domini di identità diversi; test di regressione e replay finali conservati. Non sono dedotte autenticità, sfruttabilità, prestazioni native o superiorità dai PASS.
+Final dossiers and boundaries are in [PHASES-1-3.md](PHASES-1-3.md). The aggregate record is `work/r3-gates/acceptance.json`. See [R3.md](R3.md) for the guides. The integration fixed contradictions between build and run metadata and corrected comparisons across different identity domains. Final regression and repeat runs were retained. A pass establishes only the scope of the corresponding test. Authenticity, exploitability, native performance, and tool superiority require separate evidence.
 
-Il registro seguente è storico: i suoi conteggi e limiti temporali non sostituiscono lo stato corrente.
+The earlier records below retain their original test counts and historical scope.
 
+## Earlier R0, R1, and R2 validation on November 13, 2026
 
+**Validated in the Debian 12 x86-64 lab emulated with QEMU TCG on the ARM64 Mac.** Native hardware and Kali were outside this validation. See the [combined report](PHASES-1-3.md).
 
-## Registro precedente: convalida R0/R1/R2 — 13 novembre 2026
-
-**Convalidate nel laboratorio Debian 12 x86-64 emulato con QEMU TCG sul Mac ARM64.** Non sono convalide su hardware nativo né certificazione Kali. [Rapporto integrato](PHASES-1-3.md).
-
-| Gate | Esito realmente osservato | Evidenze locali |
+| Milestone | Observed result | Local evidence |
 |---|---|---|
-| R1a/R1b | 16/16 prove reali, ripetute indipendentemente 16/16 | `work/validation/r1-validation-005`, `r1-independent-001` |
-| R0 pratico | 30 sessioni selezionate, ripetute indipendentemente altre 30 | `work/validation/r0`, `r0-independent` |
-| R2a/R2b | 22/22 prove reali, ripetute indipendentemente 22/22 | `work/validation/r2-validation-003`, `r2-independent-001` |
-| Oracolo regione R2 | GDB senza Ressembly: due cambiamenti A/B, scrittura A ripetuta non osservata come cambiamento | `work/validation/r2-primitive-oracle-001` |
-| Ampiezze ulteriori | 2/4/8 byte, offset 0/primo byte modificato; non esaustivo di ogni offset/byte | `work/validation/r2-widths` |
-| Test offline finali | 39 Python e 14 JavaScript superati; sintassi Python/shell verificata | `work/gates/python-tests-final.txt`, `javascript-tests-final.txt` |
+| R1a/R1b | 16/16 live tests passed, followed by 16/16 independent repeats | `work/validation/r1-validation-005`, `r1-independent-001` |
+| Practical R0 comparison | 30 selected sessions and 30 independent repeats | `work/validation/r0`, `r0-independent` |
+| R2a/R2b | 22/22 live tests and 22/22 independent repeats | `work/validation/r2-validation-003`, `r2-independent-001` |
+| R2 region oracle | GDB without Ressembly recorded two A/B value changes. Rewriting the same value did not produce a value-change event | `work/validation/r2-primitive-oracle-001` |
+| Additional widths | 2, 4, and 8 bytes, checking offset 0 and the first changed byte. Other offsets and bytes were outside the spot checks | `work/validation/r2-widths` |
+| Final offline tests | 39 Python and 14 JavaScript tests passed. Python and shell syntax checks passed | `work/gates/python-tests-final.txt`, `javascript-tests-final.txt` |
 
-R1/R2: GDB 13.1, Python 3.11.2, glibc 2.36. R0: runtime comune GDB 18.1/Python 3.13.11, checkout fissati e target sullo stesso guest. Hash dei sorgenti convalidati corrispondono ai file attuali. Revisione separata: corretti gli exit code nel validatore, la guard per realloc e lo stato budget nel watch; nessun difetto bloccante residuo trovato nel perimetro dichiarato. Una mutazione in copia temporanea delle generazioni è rilevata dai test; codice di produzione non alterato dalla prova.
+R1/R2 used GDB 13.1, Python 3.11.2, and glibc 2.36. R0 used a shared GDB 18.1/Python 3.13.11 runtime, pinned tool checkouts, and targets on the same guest. Validated source hashes matched the corresponding files. A separate review corrected validator exit codes, the realloc guard, and the watch budget state. It found no remaining blocking defect within the declared scope. Tests caught a deliberate mutation of generations in a temporary copy. Production code was unaffected by that test.
 
-Tutti i tentativi falliti e pilot sono conservati, esclusi dagli esiti validi. I tempi sono totali di subprocess nel guest emulato, non overhead isolato né prestazioni fisiche. Non sono dimostrati novità, superiorità o sfruttabilità. Gli eventi allocator rimangono separati dai cambiamenti di valore della sola regione osservata; scritture dello stesso valore e dati fuori copertura restano ignoti.
+Failed attempts and pilots are retained and excluded from valid results. Recorded times cover whole subprocess runs in the emulated guest. Isolated overhead and native hardware performance remain unmeasured. The results establish no novelty, superiority, or exploitability. Allocator events and value changes in the one observed region are separate evidence. Same-value writes and data outside that region remain unknown.
 
-Il resto di questo file conserva il registro delle verifiche **precedenti a questa chiusura**: i gate Linux indicati allora come mancanti sono superati solo nel perimetro esplicitato qui sopra. Al momento di questo registro R3 era ancora esclusa; è ora convalidata dal nuovo registro sopra. Hardware nativo, Kali, altri allocator e multi-thread rimangono esclusi.
+The validation above closes the earlier Linux checks within its stated scope. The newer record at the top covers R3, which remained outside this earlier check. Native hardware, Kali, other allocators, and multithreading remained outside the R0–R2 scope.
 
+The November 13 update retains the October 24 checks below as a historical record.
 
-Aggiornamento 13 novembre 2026; le verifiche del 24 ottobre restano sotto come registro storico.
+## Lab verifier update
 
-## Incremento: verificatore del laboratorio
+The working directory was `/Users/user/Documents/ChatGPT/Ressembly`, copied from `/Users/user/Documents/Codex/Projects/Ressembly`. The original was preserved and its historical `work/` directory was excluded from the copy. This change concerned the verifier. The collector, core, C fixture, and prototype were unaffected.
 
-Cartella corrente: `/Users/user/Documents/ChatGPT/Ressembly`, copia della precedente `/Users/user/Documents/Codex/Projects/Ressembly` conservata intatta. `work/` storico escluso dalla copia. Il codice del collector, del nucleo, del C didattico e del prototipo non è stato modificato in questo incremento.
+**Reproduced defect:** the earlier verifier accepted an incomplete offline capture when Python ran with optimization enabled. It returned exit code 0 and described the file as a real capture. The same file failed without optimization. GDB was outside this test.
 
-**Difetto riprodotto prima della correzione:** `python3 -O scripts/verify-marker-history.py` sulla versione precedente accettava un file contenente solo `{"events": []}` con exit 0 e un messaggio che dichiarava acquisizione reale. Senza `-O` lo stesso file falliva. La riproduzione riguarda un file offline, non GDB.
+**Implemented fix:** explicit checks independent of `assert` validate the seven markers in the fixture, sequence and declared provenance, generation-based identities, sample bytes, differences and sizes, and the final object table. Malformed JSON, duplicate keys, nonfinite numbers, and files over 2 MiB are rejected. Incorrect invocation exits 2. Invalid or unreadable input exits 1. A pass establishes consistency with the fixture's expectations. Authenticity, real acquisition, and general suite format validation are outside the verifier's scope.
 
-**Correzione implementata:** controlli espliciti indipendenti da `assert`, verifica dei sette marker del nostro laboratorio, sequenze/provenienza dichiarata, identità per generazione, byte/differenze/dimensioni dei campioni e tabella finale degli oggetti. JSON malformato, chiavi duplicate, numeri non finiti e file oltre 2 MiB sono rifiutati. Uso errato: exit 2; input invalido/non leggibile: exit 1. Successo significa coerenza con le aspettative, non autenticità o acquisizione reale. Non è un validatore generale del formato suite.
+**Checks run in this session:**
 
-**Verifiche eseguite in questa sessione:**
+- `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_*.py' -v` passed 18 tests, nine historical and nine new, with additional cases within tests. Covered normal and optimized CLI runs, fixtures with and without address reuse, partial and error states, and missing, inconsistent, and oversized inputs.
+- `node --test tests/core.test.cjs` passed 14 tests.
+- The C fixture compiled with `cc -std=c11 -g3 -O0 -fno-omit-frame-pointer -Wall -Wextra -Werror` and exited 0 on the ARM64 Mac. Its output explicitly identified a non-glibc environment.
+- Python syntax was checked without importing GDB. `sh -n scripts/run-marker-lab.sh` passed. The Mac runner returned the expected exit code 2 without producing a Linux capture.
+- Reversing the schema check in a temporary copy made the tests fail. The copy was removed afterward.
+- A separate agent found no blocking defect in the reviewed scope and reran all 18 Python tests successfully. The review was static and offline.
+- Hash comparison confirmed retention of the original and unchanged prototype and earlier tests.
 
-- `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_*.py' -v`: 18 test superati (9 storici e 9 nuovi, con più casi per test). CLI normale e ottimizzata, fixture con e senza riuso indirizzi, stati parziali/errore, input mancanti, incoerenti e oltre budget.
-- `node --test tests/core.test.cjs`: 14 test superati.
-- C compilato con `cc -std=c11 -g3 -O0 -fno-omit-frame-pointer -Wall -Wextra -Werror` ed eseguito sul Mac ARM64: exit 0, non-glibc esplicito. Non certifica Linux.
-- Sintassi Python controllata senza importare GDB; `sh -n scripts/run-marker-lab.sh` riuscito. Il runner sul Mac ritorna exit 2 previsto, senza produrre acquisizioni Linux.
-- Verifica di efficacia dei test: invertito il controllo dello schema in una copia temporanea, i test falliscono; la copia temporanea è stata rimossa, il codice corrente non è stato alterato dalla prova.
-- Revisione di un agente separato: nessun difetto bloccante trovato nel perimetro; 18 test Python rieseguiti con successo. È una revisione statica/offline, non un test GDB.
-- Confronto hash: originale conservato, prototipo e test precedenti invariati.
+This update introduced no Daybreak or other external dependency. It made no push, publication, or global configuration change. Build, run, and libc metadata remain file declarations. At this point, actual Linux x86-64 GDB sessions, competing tool benchmarks, overhead, allocator hooks, and watchpoints **had not been tested**.
 
-Nessuna dipendenza Daybreak o altra dipendenza esterna introdotta. Nessun push, pubblicazione o modifica globale. L'autenticazione di build/run/libc dal file resta fuori dal verificatore; i relativi metadati non sono una prova indipendente. Sessione reale GDB/Linux x86-64, benchmark concorrenti, overhead, hook allocator e watchpoint restano **non eseguiti**.
+## October 24, 2026 record
 
-## Registro del 24 ottobre 2026
+## Observed R1a results
 
-## R1a — risultati realmente osservati
+- Nine offline Python tests passed. They cover generations on address reuse, failed allocation, unknown or null free, bounded immutable samples, read failure, duplicate allocation, event budgets, invalid input, and rendering errors without context.
+- All 14 historical JavaScript tests passed on repeat. JavaScript syntax checks passed for the app and demo.
+- The C fixture compiled with Apple clang 17 and `-std=c11 -g3 -O0 -fno-omit-frame-pointer -Wall -Wextra -Werror`. It exited 0 on the ARM64 Mac and explicitly reported a non-glibc environment. Linux and glibc remained outside this test.
+- Python and shell syntax checks passed. The live script rejected the Mac with its expected exit code 2 and generated no capture.
+- Prototype and historical test hashes matched before and after.
+- Integrated review fixed quoting of the GDB Python check and rendering errors that lack addresses. The runtime adapter could not be tested because GDB was unavailable.
 
-- 9 test Python offline superati: generazioni su riuso, allocazione fallita, free ignota/null, campioni limitati e immutabili, lettura fallita, allocazione duplicata, budget eventi, input invalidi, rendering di errore senza contesto.
-- Rieseguiti i 14 test JavaScript storici: tutti superati. Sintassi app/demo JavaScript verificata.
-- C didattico compilato con Apple clang 17, `-std=c11 -g3 -O0 -fno-omit-frame-pointer -Wall -Wextra -Werror`; esecuzione Mac ARM64 exit 0, output esplicitamente non-glibc. Non certifica glibc/Linux.
-- Sintassi Python e shell verificata. Lo script live rifiuta il Mac con exit 2 previsto e non produce un'acquisizione.
-- Hash del prototipo e del test storico confrontati prima/dopo: invariati.
-- Revisione integrata ha corretto quoting del controllo Python GDB e rendering degli errori privi di indirizzo. Nessuna revisione sperimentale dell'adattatore GDB riuscita: GDB non disponibile.
+**Not run at the time:** GDB sessions, manual byte comparisons, debugger interruption tests, Linux or Kali x86-64 lab runs, competing tool benchmarks, overhead, watchpoints, and allocator hooks. Offline JSON fixtures remained labeled as synthetic. No GDB or glibc version was claimed as supported in production.
 
-**Non eseguito:** sessione GDB, confronto manuale dei byte, test di interruzione nel debugger, laboratorio Linux/Kali x86-64, benchmark concorrenti, overhead, watchpoint o allocator hook. Nessun JSON di test offline è presentato come raccolta reale. Nessuna versione GDB/glibc è dichiarata supportata in produzione.
+See [R1A.md](R1A.md) for the workflow and acceptance criteria, and the [October 24 audit](AUDIT-2026-10-24.md) for evidence classification. R0 documentation review was partial. R1a was implemented with operational validation still open. R1 and R2 were incomplete at that time.
 
-Percorso e gate: [R1A.md](R1A.md). Audit e classificazione delle evidenze: [AUDIT-2026-10-24.md](AUDIT-2026-10-24.md). R0 documentale parziale; R1a implementata ma validazione operativa aperta; R1/R2 non completati.
+## Historical HTML prototype record
 
-## Registro storico del prototipo HTML
+The following sections concern the historical Windows prototype. The current Linux backlog is separate.
 
-Le sezioni seguenti riguardano il prototipo Windows storico, non il backlog attuale Linux.
+## Verified
 
+- `node --test tests/core.test.cjs` passed 14 tests with zero failures and zero skips.
+- Syntax checks passed for `prototype/core.js`, `prototype/app.js`, and `prototype/demo-data.js`.
+- Tests cover ASLR, symbol collisions, separate modules, incompatible builds, different scopes, partial data, dropped events, provenance, event and thread references, invalid RVAs, unsorted sequences, and verification that the bundle is not mutated.
+- The prototype has no external JavaScript dependency or cloud service, and imported data is not executed.
 
-## Verificato
+## Validation pending in later milestones
 
-- `node --test tests/core.test.cjs`: 14 test superati, zero fallimenti e zero skip.
-- Sintassi `prototype/core.js`, `prototype/app.js` e `prototype/demo-data.js` verificata con Node.
-- I test coprono ASLR, collisioni di simboli, moduli distinti, build incompatibili, scope diversi, dati parziali, eventi persi, provenienza, riferimenti evento/thread, valori RVA invalidi, sequenze non ordinate e assenza di mutazioni del bundle.
-- Nessuna dipendenza JavaScript esterna, servizio cloud o esecuzione dei dati importati.
+Windows x64 collection, real x64dbg sessions, register and memory captures, automated native trace imports, Ghidra connection, large file support, and measurements with users were outside M0.
 
-## Da verificare nelle milestone successive
+## Interface QA
 
-Collector Windows x64, sessioni reali x64dbg, acquisizione di registri/memoria, importazione automatica di tracce native, connessione a Ghidra, supporto per file grandi e misure di beneficio con utilizzatori. Nessuna di queste capacità è attestata da M0.
+The preview opened in a local browser and was readable. Its indicators showed three B-only functions, two shared functions, and 2/6 entries. The B-only filter left exactly three rows. The initial detail showed B / event #3. End-to-end validation of import, export, and other interactions remained incomplete. No Windows desktop build was run. The temporary preview server was stopped. The files remained available locally.
 
-## QA interfaccia
+## R4/R5 update on November 13, 2026
 
-Aperta l’anteprima nel browser locale: interfaccia leggibile; indicatori verificati (3 funzioni solo B, 2 condivise, 2/6 ingressi). Il filtro Solo B lascia esattamente tre righe. Il dettaglio iniziale riporta B / evento #3. Non è stato completato il controllo end-to-end degli altri comandi: importazione, esportazione e tutte le interazioni richiedono ulteriore QA. Nessuna build desktop Windows eseguita. Il server temporaneo di anteprima è stato arrestato; i file restano apribili localmente.
+The earlier completion through R3 is historical. The [R4/R5 report](PHASES-4-5.md) records the added code, Linux and Ghidra evidence, Kali compatibility by module, human trial, and limits. The final package required a separate check from the pilots. Hashes and `validation.json` files were kept outside the package. VM cleanup was authorized after testing, and the evidence was retained on the host.
 
-## Aggiornamento R4/R5 — 13 novembre 2026
+## R6 update on November 13, 2026
 
-La precedente chiusura fino a R3 resta storica. Codice aggiunto, evidenze Linux/Ghidra, matrice Kali per modulo, prova umana e limiti correnti sono nel [rapporto R4/R5](PHASES-4-5.md). Gli esiti dei piloti non sostituiscono il collaudo dell'archivio finale; i relativi hash e validation.json rimangono esterni al pacchetto. Cleanup delle VM autorizzato dopo i test, evidenze conservate sull'host.
-
-## Aggiornamento R6 — 13 novembre 2026
-
-Profilo glibc 2.43-4 su Kali: 24 gruppi reali, regressione target 2.36 in sysroot isolato: 16 gruppi, entrambi con R2 22 casi e R5 14 casi annidati. 97 test Python e 14 JavaScript. Oracolo GDB separato, mutazione intercettata, version probe e helper-stop verificati. [Rapporto R6](R6.md). Accettazione del pacchetto, replay indipendente e pulizia effettiva sono registrati in `work/r6-gates/acceptance.json`. Nessuna prestazione nativa attestata o pubblicazione eseguita.
+The Kali glibc 2.43-4 profile passed 24 live groups. Regression testing of a glibc 2.36 target in an isolated sysroot covered 16 groups. Both included the nested R2 set of 22 cases and R5 set of 14 cases. The run passed 97 Python and 14 JavaScript tests. It used a separate GDB oracle, caught a deliberate mutation, and verified the version probe and helper stop. See the [R6 report](R6.md). Package acceptance, independent repetition, and completed cleanup are recorded in `work/r6-gates/acceptance.json`. Native performance was not established. This milestone involved no publication at that point.

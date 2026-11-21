@@ -1,92 +1,43 @@
-# R5 — cronologia allocator estesa, profilo opt-in
+# R5 — opt-in extended allocator history
 
-Aggiornamento R6: il profilo è esteso al build Kali glibc 2.43-4; differenze, ritorni e matrice in [R6.md](R6.md). Le prove 2.36 descritte sotto restano storiche.
+R6 extended the profile to Kali glibc 2.43-4. See [R6](R6.md) for layout and return-handling differences. The glibc 2.36 results below are historical.
 
-Questo modulo preserva la cronologia R2 e i suoi comandi. Si carica con
-`source /percorso/Ressembly/src/ressembly_history.py` in GDB `-nx` e usa
-`rshist-start FILE [EVENT_LIMIT]`, `rshist-continue`, `rshist-watch OBJECT_ID OFFSET WIDTH`,
-`rshist-show`, `rshist-save`, `rshist-stop`. Una cattura per sessione; le catture v1/v2
-sono mutuamente esclusive anche dopo la chiusura. Lo schema è
-`ressembly.object-history.v2`, con `metadata.target_sha256` e UUID della cattura.
+R5 preserves the R2 collector and stores extended history using `ressembly.object-history.v2`, with the target SHA-256 and a capture UUID. A GDB session can use one collector version for one capture. Closing a capture does not make it possible to load the other collector in the same session.
 
-## Perimetro
+## Scope
 
-Linux x86-64, GDB locale, processo avviato e singolo thread, glibc 2.36. Il profilo
-usa gli ingressi esatti `__libc_malloc/free/calloc/realloc` e i ritorni osservati.
-Gli ingressi vengono disabilitati durante ogni transazione: le chiamate interne
-come realloc→malloc/free non vengono contate due volte. **Le chiamate annidate o
-rientranti durante una transazione non sono coperte**, comprese eventuali chiamate
-allocator da un signal handler. Il modulo non pretende tutte le operazioni allocator.
+The initial lab used Linux x86-64, local GDB, a launched single-threaded process, and glibc 2.36. The profile records selected glibc malloc, free, calloc, and realloc calls and observed returns. Nested and reentrant allocator calls during a transaction are outside coverage. This also applies to calls from a signal handler that interrupts a transaction.
 
-La base usa il motore già verificato per controllo del run, persistenza e ripresa;
-il nuovo modello gestisce transazioni realloc e finestre distinte. Il cambiamento
-R2 è limitato al rifiuto dell'avvio dopo una cattura v2, per evitare collector
-contemporanei. Gli eventi precedenti non sono convertiti o riscritti.
+The module reuses the validated run checks, saving, and continuation behavior. The extended model records realloc transactions and separate observation windows. The only R2 behavior change prevents it from starting after a v2 capture. Old event files retain their original format.
 
-## Semantica delle operazioni
+## Operation semantics
 
-- calloc conserva count, element_size, prodotto matematico e overflow size_t;
-  l'eventuale azzeramento non diventa una sequenza di scritture osservate.
-- realloc(NULL,n) produce una nuova allocazione al ritorno osservato, senza contare
-  la chiamata malloc interna. Un oggetto di dimensione richiesta zero non offre una
-  regione sorvegliabile.
-- realloc nonzero fallita conserva identità e dimensione del vecchio oggetto.
-- realloc riuscita chiude la vecchia identità e ne crea una nuova, anche allo stesso
-  indirizzo, con relazione predecessore/successore. È una convenzione conservativa
-  della cronologia, non l'affermazione che l'allocator abbia liberato fisicamente
-  e riallocato la stessa memoria.
-- realloc(nonnull,0) segue la policy glibc dichiarata: liberazione e risultato NULL.
-  Non è una regola portabile di tutti gli allocator.
-- Un ritorno mancante o un budget esaurito durante la transazione lascia lo stato
-  `unknown_after_incomplete_realloc`; nessuna riuscita o free viene inventata.
+- calloc retains the element count, element size, mathematical product, and size_t overflow status. The zeroing operation does not become a sequence of observed writes.
+- realloc with a null old pointer records a new allocation on the observed return. The internal malloc is not counted again. A request of size zero provides no region to observe.
+- A failed nonzero realloc preserves the previous object's identity and size.
+- A successful realloc closes the prior identity and creates a successor even if the address is unchanged. This is an object-history convention. It does not assert that the allocator physically freed and reallocated the same memory.
+- Realloc with a non-null pointer and zero size follows the declared glibc behavior for the profile. That behavior is allocator-specific.
+- A missing return or exhausted budget leaves the transaction `unknown_after_incomplete_realloc`. The record does not invent a successful realloc or free.
 
-## Regioni e riferimenti al codice
+## Observation regions and code references
 
-Fino a quattro regioni selezionate, di 1/2/4/8 byte naturalmente allineati, entro
-la dimensione richiesta. Le sovrapposizioni sono rifiutate. Ogni finestra ha ID,
-baseline, richiesta, attivazione, eventi e fine propri. Costruire un watchpoint non
-prova l'inserimento hardware: si attiva la copertura soltanto dopo una ripresa
-riuscita. Risorse esterne possono impedire l'inserimento; il fallback software è
-rifiutato. Scritture dello stesso valore possono essere assenti.
+Up to four nonoverlapping, naturally aligned regions of 1, 2, 4, or 8 bytes can be selected within requested object sizes. Every window has its own identity, sample, activation, events, and termination. Coverage requires successful insertion on resume. External hardware slot usage may prevent insertion and software fallback is refused. Same-value writes may be absent.
 
-Le finestre dell'oggetto terminano all'ingresso di free/realloc, prima delle
-operazioni interne allocator. Anche se realloc fallisce occorre riselezionare
-esplicitamente la regione: nessuna continuità di osservazione viene presunta.
-Le finestre su altri oggetti rimangono separate.
+An object's windows end at free or realloc entry. A failed realloc still requires a new selection. Windows on other objects remain separate.
 
-Ogni evento osservato conserva il PC e, quando risolvibili, funzione, sorgente e
-mappatura del modulo. `file_offset` è calcolato dal file offset della mappatura più
-l'offset interno: **non è un RVA dal load base**. Per mappe senza file rimane ignoto.
-Il caller all'ingresso è un return site, non l'istruzione call. Per i watchpoint il
-PC è quello di arresto dopo l'istruzione; lo scrittore non viene attribuito.
-Nessun segnale implica automaticamente vulnerabilità o sfruttabilità.
+Events carry stop PCs and may include a function, source, and module mapping. A file offset comes from the on-disk mapping plus the offset within that mapping. It is distinct from a load-base-relative RVA. Anonymous mappings have no known file offset. A caller return site and a watchpoint stop PC do not establish the instruction responsible for a write.
 
-## Riproduzione e convalida
+## Validation
 
-```sh
-python3 -m unittest discover -s tests -p test_history_v2.py -v
-python3 scripts/validate-history-v2-linux.py work/r5-history-NEW
-```
+The test fixture is project-owned and emits no allocator markers. The matrix covers calloc and realloc argument and return cases, requested region coverage, multiple objects, hardware limits, unavailable memory, signals, incomplete returns, event budgets, and collector conflicts. An independent GDB path compares zeroing, in-place and moving realloc, and retention after failure.
 
-Il C è nostro e non emette marker allocator. Le prove registrano argomenti e stati
-con GDB, casi calloc/NULL/zero/fallimento/in-place/move, quattro regioni su due
-oggetti, risorse hardware, fallback, memoria illeggibile, segnale, budget, ritorno
-perso e conflitto tra collector. Un percorso separato GDB senza Ressembly verifica
-byte zero, realloc in-place, spostamento e conservazione dopo fallimento.
+The Debian validation passed 14 cases in `work/r5-history-003`. The independent repeat passed the 14 cases in `work/r5-history-independent-001`. Both dossiers contain source hashes. Five offline model tests passed and detected a mutation of the zero-size realloc policy. The integrated suite was checked with two load orders and a reload in `work/r5-independent-regression-001`.
 
-Convalida Debian: 14 casi superati in `work/r5-history-003` e 14 nel replay
-indipendente `work/r5-history-independent-001`, entrambi con hash dei sorgenti.
-Cinque test del modello offline superati; mutazione della policy realloc zero
-intercettata. La suite integrata carica anche i comandi rshist; due ordini di
-caricamento e il ricaricamento sono verificati nel dossier
-`work/r5-independent-regression-001`.
-Il laboratorio Debian x86-64 emulato non attesta altre versioni glibc, Kali corrente,
-prestazioni native, attach, fork, multithread o allocator diversi.
+The emulated Debian x86-64 lab does not establish native performance, current Kali support, other libc versions or allocators, attach, fork, or multithreaded collection.
 
-## Fonti primarie consultate
+## Primary sources
 
-- [glibc 2.36 malloc.c](https://raw.githubusercontent.com/bminor/glibc/glibc-2.36/malloc/malloc.c), policy zero e percorsi interni realloc.
-- [GNU realloc](https://sourceware.org/glibc/manual/latest/html_node/Changing-Block-Size.html), fallimento e conservazione del vecchio blocco.
-- [GNU calloc](https://sourceware.org/glibc/manual/latest/html_node/Allocating-Cleared-Space.html), significato dell'azzeramento.
-- [GDB watchpoint](https://sourceware.org/gdb/current/onlinedocs/gdb.html/Set-Watchpoints.html), risorse e inserimento alla ripresa.
-- [GDB FinishBreakpoint](https://sourceware.org/gdb/current/onlinedocs/gdb.html/Finish-Breakpoints-in-Python.html), ritorni e out-of-scope.
+- [glibc 2.36 allocator source](https://raw.githubusercontent.com/bminor/glibc/glibc-2.36/malloc/malloc.c).
+- [GNU realloc](https://sourceware.org/glibc/manual/latest/html_node/Changing-Block-Size.html) and [GNU calloc](https://sourceware.org/glibc/manual/latest/html_node/Allocating-Cleared-Space.html).
+- [GDB watchpoints](https://sourceware.org/gdb/current/onlinedocs/gdb.html/Set-Watchpoints.html).
+- [GDB FinishBreakpoint](https://sourceware.org/gdb/current/onlinedocs/gdb.html/Finish-Breakpoints-in-Python.html).

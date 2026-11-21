@@ -1,32 +1,32 @@
-> Documento storico v0.1: la direzione corrente approvata il 24 ottobre 2026 è in [SUITE-UNIT47.md](SUITE-UNIT47.md). Il piano Windows/C++/Qt qui descritto è superato.
+> Historical v0.1 document. [SUITE-UNIT47.md](SUITE-UNIT47.md) records the direction approved on October 24, 2026. That decision superseded the Windows/C++/Qt plan below.
 
-# Ressembly — applicazione desktop
+# Ressembly desktop application
 
-Decisione del 24 ottobre 2026: il prodotto è un’app Windows x64 in C++ con Qt. L’HTML consegnato è un’anteprima temporanea dell’esperienza, non un sito web né il prodotto finale.
+The desktop proposal of October 24, 2026 described a Windows x64 application in C++ with Qt. The HTML preview illustrates the interface until the native application is ready.
 
-## Componenti
+## Components
 
-- **Ressembly.exe**: finestra desktop, gestione esperimenti, visualizzazione delle evidenze, notebook ed esportazione.
-- **Core C++**: identità del binario/moduli, validazione osservazioni, normalizzazione RVA, confronto e riferimenti. Deve riprodurre i risultati del corpus M0; non è implementato oggi.
-- **Adattatore x64dbg**: plugin separato per gli eventi e i comandi effettivamente supportati. Prima versione limitata a punti di osservazione selezionati. Non sostituisce il motore del debugger.
-- **Adattatore Ghidra**: associazione di metadati statici alla build esatta. Previsto dopo il collector; non già collegato.
+- **Ressembly.exe:** Desktop window, experiment management, evidence viewer, notebook, and export.
+- **C++ core:** Binary and module identity, observation validation, RVA normalization, comparison, and evidence references. Implementation remained open. It would have to reproduce the M0 corpus results.
+- **x64dbg adapter:** Separate plugin for supported events and commands. Initial scope would cover selected observation points while x64dbg remained responsible for debugging.
+- **Ghidra adapter:** Links static metadata to the exact build. Planned after the collector.
 
-## Primo percorso nativo
+## First native workflow
 
-La prima shell apre file di osservazioni locali e consente analisi offline. Solo dopo il superamento dei test viene aggiunta una connessione esplicita al collector Windows. Nessun listener HTTP è necessario. Un eventuale canale IPC deve essere locale, limitato alla sessione e con controllo dell’identità del processo; non è presente nel prototipo.
+The initial shell would open local observation files for offline analysis. An explicit connection to the Windows collector would follow once tests passed. The design requires no HTTP listener. Any IPC would be local to the session and check the process identity. The prototype has no IPC.
 
-## Schermata prevista
+## Proposed screen
 
-1. Esperimenti e input a sinistra.
-2. Funzioni e assembly al centro, con provenienza delle informazioni.
-3. Registri, memoria e stack soltanto quando effettivamente acquisiti dal debugger.
-4. Evidenze e annotazioni collegate all’esperimento.
-5. Confronto fra osservazioni dello stesso binario, evitando indirizzi assoluti e corrispondenze per nome soltanto.
+1. Experiments and inputs on the left.
+2. Functions and assembly in the center, with clear provenance.
+3. Registers, memory, and stack when captured by the debugger.
+4. Evidence and annotations linked to the experiment.
+5. Comparison of observations from the same binary using build and module identity. Absolute addresses and names alone are insufficient.
 
-Un pannello senza dati mostra «non acquisito», non registri o assembly inventati. I pulsanti di esecuzione saranno attivati soltanto con un backend vivo e verificato.
+An empty panel displays “not captured.” Execution controls require a live, verified backend.
 
-## Sviluppo e verifica
+## Development and validation
 
-Qt/C++ permette di organizzare una GUI desktop, ma non rende intercambiabili i motori di debugging fra sistemi operativi. La prima versione operativa richiede Windows x64. Una futura applicazione macOS potrà leggere dossier ed esportazioni; il debugging nativo macOS richiederebbe un adattatore distinto.
+Qt and C++ provide the desktop interface. Each operating system still needs a compatible debugging backend. The first operational version would require Windows x64. A future macOS application could read dossiers and exports. Native macOS debugging would require a separate adapter.
 
-Oggi sono consegnati progetto, contratto iniziale, anteprima e motore di confronto JavaScript. Non esistono ancora una build .exe, un plugin x64dbg o una sessione live verificata.
+At the time of this proposal, the deliverables were the project design, initial contract, preview, and JavaScript comparison engine. The .exe build, x64dbg plugin, and verified live session were still open.

@@ -1,22 +1,22 @@
-# R4 — pacchetto alfa locale
+# R4 — Local alpha package
 
-Il pacchetto contiene codice Ressembly, esempi nostri, guide, licenza e avvisi. Esclude `work/`, immagini VM, chiavi, acquisizioni, cache, comparatori GEF/Pwndbg e prototipo HTML. Nessuna pubblicazione o invio in rete. Licenza del codice del progetto: vedere `LICENSE` e `NOTICE`; i programmi esterni restano separati.
+The package contains Ressembly code, project-owned examples, guides, the license, and notices. It excludes `work/`, VM images, keys, captures, caches, external GEF and Pwndbg comparison tools, and the HTML prototype. R4 distribution was local. See `LICENSE` and `NOTICE` for licensing. External programs remain separate.
 
-## Creazione e verifica
+## Build and verify
 
-Dalla cartella sorgente, con Python 3.9 o successivo:
+From the source checkout, with Python 3.9 or later:
 
 ```sh
 python3 scripts/build-local-package.py work/ressembly-0.5.0-local.zip
 ```
 
-L'output deve essere nuovo. La costruzione usa una lista di directory, suffissi e CLI ammessi; non archivia l'intera cartella del progetto. Il manifest registra percorso, dimensione, modalità e SHA-256 di ogni file. Due costruzioni con identici file ammessi producono byte identici. Il checksum rileva incoerenze, **non autentica il produttore**. Le copie dei file storici conservate nel sorgente non sono una funzionalità operativa aggiuntiva.
+Choose a new output path. The builder includes only allowed directories, suffixes, and CLI files. The manifest records the path, size, mode, and SHA-256 of every file. Two builds with identical allowed files produce identical bytes. Checksums detect inconsistencies and do not authenticate the publisher. Historical files retained in source are records of past work.
 
-Limiti dell'archivio: 32 MiB, fino a 512 file, singolo file 2 MiB, totale contenuti 24 MiB. Il formato locale ammette solo file regolari ZIP non compressi, percorsi relativi nel layout previsto, nessun link o entry duplicata. Non è un estrattore ZIP generico.
+The archive limit is 32 MiB. It permits up to 512 files, with at most 2 MiB per file and 24 MiB of total content. The local format accepts only regular, uncompressed ZIP entries at relative paths in the expected layout. Links and duplicate entries are rejected.
 
-## Installazione in spazio utente
+## User-space installation
 
-Su Linux x86-64, come utente ordinario, dalla cartella sorgente:
+Run from the source checkout as an ordinary user on Linux x86-64:
 
 ```sh
 mkdir -p "$HOME/.local"
@@ -26,23 +26,23 @@ python3 scripts/install-local.py install work/ressembly-0.5.0-local.zip "$HOME/.
 "$HOME/.local/ressembly-alpha/bin/ressembly" --help
 ```
 
-La directory padre deve già esistere e appartenere all'utente. Il prefisso deve essere nuovo, senza symlink lungo il percorso. Per una nuova versione usare un altro prefisso; non è previsto un aggiornamento distruttivo in-place. Sono supportati spazi nei percorsi; citare gli argomenti come negli esempi. `root` è rifiutato. Nessuna scrittura in `.gdbinit`, profili shell, PATH globale o directory di sistema; nessuna installazione automatica delle dipendenze. Il pacchetto non richiede pip, servizi web o IA. Per eseguire gli esempi serve anche un compilatore C.
+The parent directory must already exist and belong to the user. Use a new prefix with no symlinks along the path. Install new versions in separate prefixes. Paths with spaces are supported when quoted as shown. The installer rejects root. It leaves `.gdbinit`, shell profiles, global PATH, and system directories untouched. Dependencies are installed separately. The package does not require pip, web services, or AI. The examples also require a C compiler.
 
-Il comando `doctor` scopre ambiente, Python, GDB/Python e libc del sistema. Distingue i prerequisiti generali dal profilo heap e segnala libc host non supportata; i moduli heap verificano nuovamente la **libc effettivamente caricata nel processo**. Una discovery riuscita non costituisce convalida operativa, né garantisce simboli glibc disponibili. La matrice effettivamente collaudata è registrata dal rapporto R4/R5.
+The `doctor` command discovers the environment, Python, Python-enabled GDB, and the system libc. It distinguishes general prerequisites from the heap profile and flags unsupported host libc versions. Heap modules separately check the **libc loaded into the process**. A successful discovery does not certify operation or guarantee that glibc symbols are available. The [R4/R5 report](PHASES-4-5.md) records the tested matrix.
 
-Layout installato:
+Installed layout:
 
-- `bin/ressembly`: launcher locale;
-- `lib/ressembly/src`: moduli GDB/Python;
-- `lib/ressembly/scripts`: CLI offline;
-- `lib/ressembly/examples`, `integrations`, `docs`: esempi, bridge e guide;
-- `.ressembly-manifest.json`: registro dei file installati.
+- `bin/ressembly` holds the local launcher.
+- `lib/ressembly/src` holds the GDB and Python modules.
+- `lib/ressembly/scripts` holds the offline CLIs.
+- `lib/ressembly/examples`, `integrations`, and `docs` contain examples, bridges, and guides.
+- `.ressembly-manifest.json` lists the installed files.
 
-Matrice aggiornata dei profili allocator: [R6.md](R6.md). La versione 0.6.0 aggiunge il build Kali glibc 2.43-4; le evidenze R4/R5 restano storiche.
+See [R6.md](R6.md) for the updated allocator profile matrix. Version 0.6.0 adds the Kali build of glibc 2.43-4. The R4/R5 evidence describes the earlier release.
 
-## Primo avvio
+## First run
 
-Creare il binario e i risultati **fuori dal prefisso di installazione**:
+Build the binary and store results **outside the installation prefix**:
 
 ```sh
 mkdir work/alpha-demo-001
@@ -50,7 +50,7 @@ cc -g3 -O0 "$HOME/.local/ressembly-alpha/lib/ressembly/examples/heap_lab.c" -o w
 "$HOME/.local/ressembly-alpha/bin/ressembly" gdb work/alpha-demo-001/heap_lab
 ```
 
-Dentro GDB, inserire **un comando alla volta** e premere Invio dopo ciascuno. `set pagination off` disattiva le pause di visualizzazione:
+In GDB, enter each command on a separate line. Use `set pagination off` to disable display pauses.
 
 ```gdb
 rs-help
@@ -60,9 +60,9 @@ rs-context
 rs-maps
 ```
 
-Il launcher usa GDB `-nx`, disabilita l'autocaricamento e carica la suite dal proprio prefisso mediante un bootstrap Python: nessuna concatenazione di comandi shell. Gli argomenti passati dopo `gdb` sono normali argomenti GDB. Per raccolta heap, simboli glibc e funzioni aggiuntive seguire le guide dei moduli e la matrice verificata.
+The launcher runs GDB with `-nx`, disables autoloading, and loads the suite from the installation prefix using a Python bootstrap. It passes arguments after `gdb` directly as GDB arguments, with no shell command concatenation. Refer to the module guides and tested matrix for heap collection, glibc symbols, and optional features.
 
-CLI offline disponibili:
+Available offline CLIs:
 
 ```sh
 "$HOME/.local/ressembly-alpha/bin/ressembly" lab --help
@@ -71,20 +71,24 @@ CLI offline disponibili:
 "$HOME/.local/ressembly-alpha/bin/ressembly" ghidra --help
 ```
 
-Gli ultimi due comandi hanno i rispettivi confini e procedure di fiducia descritti dalle guide dell'estensione. Il launcher non installa Ghidra né abilita automaticamente plugin.
+The plugin and Ghidra guides detail their trust procedures and scope. The launcher leaves Ghidra installation and plugin activation to the user.
 
-## Disinstallazione e conservazione dei dati
+## Uninstall and retain data
 
 ```sh
 "$HOME/.local/ressembly-alpha/bin/ressembly" uninstall
 ```
 
-Prima della rimozione vengono controllati manifest, contenuto, modalità, percorsi e inventario completo. Se un file è cambiato, se compare un link, una cartella o un file non previsto, il comando si ferma **prima di rimuovere file**. Non elimina ricorsivamente contenuti sconosciuti. Esaminare e conservare manualmente ciò che è stato aggiunto/modificato, quindi riprovare; non esiste `--force`.
+Before removing anything, the uninstaller checks the manifest, contents, file modes, paths, and full inventory. It stops **before deleting files** if it finds modifications, links, or unexpected files or directories. It does not recursively delete unknown content. Review and save additions or modifications before retrying. There is no `--force` option.
 
-Non aggiungere note, plugin personali o dossier dentro il prefisso: mantenerli in cartelle di lavoro separate. L'installazione/disinstallazione presuppone che nessun altro processo modifichi contemporaneamente quel prefisso. Un'interruzione durante l'installazione può lasciare un prefisso incompleto; non viene automaticamente eliminato al tentativo successivo. Verificarlo prima di rimuoverlo manualmente. L'operazione non promette transazioni resistenti a ogni guasto di disco.
+Keep notes, personal plugins, and dossiers in separate working directories. Installation and uninstallation assume no other process is modifying the prefix at the same time. An interrupted installation can leave an incomplete prefix. A retry does not automatically remove it, so verify it before manual deletion. The operation does not guarantee recovery from every disk failure.
 
-## Collaudo
+## Validation
 
-Test offline del confezionamento: `python3 -m unittest discover -s tests -p test_packaging.py -v`.
+Offline packaging tests:
 
-La convalida Linux viene eseguita dal percorso `scripts/validate-package-linux.py` in directory nuova: due build riproducibili, installazione pulita in prefisso con spazi, verifica, avvio reale GDB su C nostro, CLI, rifiuto di pacchetto manomesso, conservazione di file aggiunti e disinstallazione. È possibile passare un archivio già costruito come secondo argomento (`NEW_DIRECTORY EXISTING_ZIP`): in questo caso il controllo dichiara esplicitamente che la riproducibilità della build non è verificata sul guest. Il risultato deve essere conservato separatamente per ogni distribuzione. I test offline sul Mac non attestano GDB/Linux o Kali.
+```sh
+python3 -m unittest discover -s tests -p test_packaging.py -v
+```
+
+For Linux validation, run `scripts/validate-package-linux.py` with a new directory. It checks two reproducible builds, clean installation in a prefix with spaces, verification, a real GDB run against project-owned C code, the CLI, rejection of tampered content, preservation of added files, and uninstallation. To test an existing archive, pass `NEW_DIRECTORY EXISTING_ZIP`. That path explicitly records that build reproducibility was not checked in the guest. Retain separate results for each distribution. Offline Mac tests cover packaging and do not certify GDB on Linux or Kali.

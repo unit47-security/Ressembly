@@ -1,22 +1,22 @@
-# Preparazione alla prima alfa GitHub
+# Preparing the first GitHub alpha
 
-13 novembre 2026. Questa preparazione non pubblica né carica nulla. Destinazione desiderata dall'utente: GitHub. La decisione finale di creazione del repository, visibilità e caricamento rimane esplicita.
+November 13, 2026. This report records preparation for GitHub. The final decisions on creating the repository, its visibility, and upload were reserved for explicit approval by the project owner.
 
-Il perimetro proponibile è **alfa sperimentale 0.6.0**, Linux x86-64/GDB/Python, GPL-3.0-or-later. Non presentare il progetto come suite universale completa, migliore di GEF/Pwndbg o capace di dedurre sfruttabilità automaticamente.
+The proposed scope was **experimental alpha 0.6.0** on Linux x86-64 with GDB and Python under GPL-3.0-or-later. This scope identifies the tested capabilities. It makes no claim of platform coverage beyond that matrix, superiority to GEF or Pwndbg, or automated exploitability assessment.
 
-## Materiale preparato
+## Prepared material
 
-- Sorgenti, programmi C nostri, test e validatori ripetibili.
-- LICENSE completa e NOTICE per il codice originale; strumenti esterni non inclusi né rilicenziati.
-- README, roadmap, installazione/disinstallazione locale e limiti per modulo.
-- Pacchetto deterministico, manifest SHA-256 e verifiche di installazione; esito conclusivo in `work/r6-gates/acceptance.json`.
-- `.gitignore` esclude `work/`, bytecode e metadati Finder. Immagini VM, chiavi, dossier e dipendenze scaricate non appartengono al materiale da caricare.
-- Scansione limitata di pattern di chiavi/token sui file di testo: esito in `work/r6-gates/publication-pattern-scan.json`; non costituisce una prova esaustiva di assenza di segreti.
+- Source, project-owned C fixtures, tests, and repeatable validators.
+- The full LICENSE and a NOTICE for original code. External tools retain their licenses and are excluded from the package.
+- README, roadmap, local installation and removal instructions, and module limits.
+- A deterministic package, SHA-256 manifest, and installation checks. The final result is recorded in `work/r6-gates/acceptance.json`.
+- `.gitignore` excludes `work/`, bytecode, and Finder metadata. VM images, keys, dossiers, and downloaded dependencies are excluded from the publication scope.
+- A limited key and token pattern scan of text files, recorded in `work/r6-gates/publication-pattern-scan.json`. This scan cannot establish the absence of all secrets.
 
-## Come presentarla
+## Publication notes
 
-Dichiarare i build effettivamente provati, l'emulazione TCG sul Mac e la regressione 2.36 in ambiente misto. Versioni vicine come 2.43.1, hardware nativo, multithread, attach/fork, altri allocator e GUI non sono convalidati. Ghidra è un bridge offline; i plugin sono codice fidato con i permessi dell'utente, non una sandbox.
+List the tested builds, identify TCG emulation on the Mac, and describe the glibc 2.36 regression in mixed userland. Adjacent versions such as 2.43.1, native hardware, multithreading, attach and fork, other allocators, and a GUI remain unvalidated. Ghidra integration is offline. Trusted plugin code runs with the user's permissions and without a sandbox.
 
-Non caricare l'intera cartella di lavoro senza una selezione. La prima pubblicazione dovrà selezionare sorgenti, esempi, test, integrazioni, guide e licenza; per una release allegare solo il pacchetto conclusivo e il relativo checksum. I checksum attestano coerenza, non autenticità del produttore.
+Select source, examples, tests, integrations, guides, and license from the working directory. A release should attach the final package and its checksum. A checksum verifies file consistency. Publisher authenticity needs separate evidence.
 
-Prima del caricamento verificare che l'acceptance finale sia PASS e scegliere con il proprietario account/organizzazione, nome repository e visibilità. Nessun repository remoto o workflow di pubblicazione è stato creato da R6. Nome e marchio non risultano verificati.
+Before uploading, check that final acceptance reports PASS and confirm the account or organization, repository name, and visibility with the project owner. As of R6, no remote repository or publication workflow had been created. The name and trademark had yet to be verified.
